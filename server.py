@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-AI-Powered Smart Window Ventilation & Environmental Analytics System - Flask Backend Server
+AI-Powered Smart Window Ventilation & Environmental Analytics System
 Team InnovateX | MinorProject@2026
 """
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import random
 import time
@@ -12,11 +12,14 @@ import threading
 import os
 from datetime import datetime
 
-app = Flask(__name__)
+# ─────────────────────────────────────────────
+# APP SETUP
+# ─────────────────────────────────────────────
+app = Flask(__name__, static_folder="frontend")
 CORS(app)
 
 # ─────────────────────────────────────────────
-# SHARED STATE
+# SENSOR STATE
 # ─────────────────────────────────────────────
 sensor_state = {
     "temperature": 29.9,
@@ -38,11 +41,11 @@ manual_override = {
 lock = threading.Lock()
 
 # ─────────────────────────────────────────────
-# SIMPLE ROOT ROUTE (FIX FOR YOUR ERROR)
+# FRONTEND ROUTE (IMPORTANT FIX)
 # ─────────────────────────────────────────────
 @app.route('/')
 def home():
-    return "🚀 Smart Window Backend is Running Successfully!"
+    return send_from_directory('frontend', 'index.html')
 
 # ─────────────────────────────────────────────
 # AI DECISION ENGINE
@@ -54,7 +57,7 @@ def ai_decision(data):
     r = data["rain"]
     l = data["light"]
 
-    angle, confidence, factors = 45, 70, []
+    angle, confidence = 45, 70
 
     if r:
         angle, confidence = 0, 98
@@ -90,22 +93,21 @@ def simulate_sensors():
         time.sleep(3)
 
 # ─────────────────────────────────────────────
-# ROUTES
+# API ROUTES
 # ─────────────────────────────────────────────
-
 @app.route('/api/data', methods=['GET'])
 def get_data():
     with lock:
-        d = dict(sensor_state)
+        data = dict(sensor_state)
 
-    decision = ai_decision(d)
-    return jsonify({**d, "ai_decision": decision})
+    decision = ai_decision(data)
+    return jsonify({**data, "ai_decision": decision})
 
 @app.route('/api/status', methods=['GET'])
 def status():
     return jsonify({
         "server": "online",
-        "version": "fixed"
+        "version": "final"
     })
 
 # ─────────────────────────────────────────────
