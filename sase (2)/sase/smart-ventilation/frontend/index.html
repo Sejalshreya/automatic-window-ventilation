@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Powered Smart Window Ventilation & Environmental Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:ital,wght@0,200;0,400;0,600;0,700;0,800;1,300&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════════════════ */
+:root {
+  --bg:     #f8fafb;
+  --bg2:    #f3f5f7;
+  --bg3:    #eff2f5;
+  --card:   rgba(255,255,255,0.95);
+  --border: rgba(41,128,185,0.12);
+  --border-hi: rgba(41,128,185,0.25);
+  --cyan:   #0088cc;
+  --cyan2:  #0099dd;
+  --teal:   #00aa88;
+  --green:  #22bb55;
+  --amber:  #dd8800;
+  --red:    #dd3366;
+  --purple: #7744cc;
+  --pink:   #dd5599;
+  --text:   #2c3e50;
+  --text2:  #7f8c8d;
+  --text3:  #95a5a6;
+  --sidebar-w: 220px;
+  --header-h: 56px;
+  --glow-c: 0 0 30px rgba(0,136,204,0.12);
+  --glow-g: 0 0 20px rgba(34,187,85,0.12);
+}
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Exo 2',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BACKGROUND ATMOSPHERE
+═══════════════════════════════════════════════════════ */
+
+.bg-layer{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 5%, rgba(0,136,204,0.04) 0%,transparent 65%),
+    radial-gradient(ellipse 50% 50% at 90% 90%, rgba(0,170,136,0.03) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(119,68,204,0.02) 0%,transparent 55%),
+    linear-gradient(180deg,#f8fafb 0%,#f3f6f8 100%);
+}
+.scanlines{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,136,204,0.004) 3px,rgba(0,136,204,0.004) 4px);
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   LANDING PAGE
+═══════════════════════════════════════════════════════ */
+#landing{
+  position:fixed;inset:0;z-index:1000;
+  background:#f8fafb;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+  transition:opacity 0.8s ease, transform 0.8s ease;
+}
+#landing.hide{
+  opacity:0;pointer-events:none;transform:scale(1.04);
+}
+
+/* Landing animated waves */
+.landing-waves{
+  position:absolute;inset:0;overflow:hidden;
+}
+.lw-svg{
+  position:absolute;bottom:0;left:0;width:200%;
+  animation:waveScroll 8s linear infinite;
+  opacity:0.25;
+}
+.lw-svg:nth-child(2){
+  animation-duration:11s;animation-delay:-3s;opacity:0.15;bottom:10px;
+}
+.lw-svg:nth-child(3){
+  animation-duration:14s;animation-delay:-6s;opacity:0.1;bottom:20px;
+}
+@keyframes waveScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+/* rotating IoT rings */
+.landing-rings{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:600px;height:600px;pointer-events:none;
+}
+.ring{
+  position:absolute;top:50%;left:50%;
+  border-radius:50%;border:1px solid rgba(0,136,204,0.12);
+  transform:translate(-50%,-50%);
+  animation:ringPulse 4s ease-in-out infinite;
+}
+.ring:nth-child(1){width:200px;height:200px;animation-delay:0s;border-color:rgba(0,136,204,0.2);}
+.ring:nth-child(2){width:320px;height:320px;animation-delay:0.5s;animation-duration:5s;}
+.ring:nth-child(3){width:450px;height:450px;animation-delay:1s;animation-duration:6s;}
+.ring:nth-child(4){width:590px;height:590px;animation-delay:1.5s;animation-duration:7s;border-color:rgba(0,170,136,0.06);}
+@keyframes ringPulse{0%,100%{opacity:0.3;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.8;transform:translate(-50%,-50%) scale(1.015)}}
+
+/* orbit dots */
+.orbit-dot{
+  position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:50%;
+  margin:-4px 0 0 -4px;
+}
+.orbit-dot:nth-child(5){background:var(--cyan);box-shadow:0 0 12px var(--cyan);animation:orbit1 8s linear infinite;}
+.orbit-dot:nth-child(6){background:var(--teal);box-shadow:0 0 10px var(--teal);animation:orbit2 12s linear infinite;}
+.orbit-dot:nth-child(7){background:var(--green);box-shadow:0 0 8px var(--green);animation:orbit3 16s linear infinite;}
+@keyframes orbit1{from{transform:rotate(0deg) translateX(160px) rotate(0deg)}to{transform:rotate(360deg) translateX(160px) rotate(-360deg)}}
+@keyframes orbit2{from{transform:rotate(0deg) translateX(225px) rotate(0deg)}to{transform:rotate(360deg) translateX(225px) rotate(-360deg)}}
+@keyframes orbit3{from{transform:rotate(0deg) translateX(295px) rotate(0deg)}to{transform:rotate(360deg) translateX(295px) rotate(-360deg)}}
+
+.landing-content{
+  position:relative;z-index:2;text-align:center;max-width:820px;padding:0 24px;
+}
+.landing-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:5px 16px;border-radius:20px;
+  background:rgba(0,136,204,0.08);
+  border:1px solid rgba(0,136,204,0.25);
+  font-family:'Share Tech Mono',monospace;
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:#0099dd;margin-bottom:28px;
+  animation:fadeUp 0.8s ease backwards;
+}
+.lb-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:blink 2s infinite;}
+
+.landing-title{
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(28px,5vw,58px);
+  font-weight:700;
+  line-height:1.1;
+  letter-spacing:-0.5px;
+  background:linear-gradient(135deg,#2c3e50 0%,#0088cc 40%,#00aa88 70%,#22bb55 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:24px;
+  animation:fadeUp 0.8s 0.2s ease backwards;
+}
+
+.landing-intro{
+  font-size:15px;line-height:1.8;
+  color:var(--text2);max-width:600px;margin:0 auto 36px;
+  font-weight:300;
+  animation:fadeUp 0.8s 0.4s ease backwards;
+}
+.landing-intro strong{color:var(--text);font-weight:600;}
+
+.landing-enter{
+  display:inline-flex;align-items:center;gap:12px;
+  padding:14px 36px;border-radius:50px;
+  background:linear-gradient(135deg,rgba(0,136,204,0.15),rgba(0,170,136,0.12));
+  border:1px solid rgba(0,136,204,0.4);
+  color:#2c3e50;font-family:'Rajdhani',sans-serif;
+  font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.3s;
+  box-shadow:0 0 40px rgba(0,136,204,0.1);
+  animation:fadeUp 0.8s 0.6s ease backwards;
+  text-decoration:none;
+}
+.landing-enter:hover{
+  background:linear-gradient(135deg,rgba(0,136,204,0.25),rgba(0,170,136,0.2));
+  box-shadow:0 0 60px rgba(0,136,204,0.2);
+  transform:translateY(-2px) scale(1.02);
+}
+.enter-arrow{
+  display:inline-block;
+  animation:arrowBounce 1.5s ease-in-out infinite;
+  font-size:20px;
+}
+@keyframes arrowBounce{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+
+.landing-features{
+  display:flex;gap:24px;justify-content:center;margin-top:40px;flex-wrap:wrap;
+  animation:fadeUp 0.8s 0.8s ease backwards;
+}
+.lf-item{
+  display:flex;align-items:center;gap:8px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:11px;color:var(--text3);letter-spacing:1px;
+}
+.lf-item .dot{width:5px;height:5px;border-radius:50%;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ═══════════════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════════════ */
+#app{
+  position:relative;z-index:1;
+  display:flex;min-height:100vh;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════════ */
+.sidebar{
+  width:var(--sidebar-w);
+  min-height:100vh;
+  background:rgba(255,255,255,0.98);
+  border-right:1px solid var(--border);
+  position:fixed;left:0;top:0;bottom:0;
+  z-index:100;display:flex;flex-direction:column;
+  backdrop-filter:blur(24px);
+  transition:transform 0.3s;
+}
+
+.sb-logo{
+  padding:18px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+}
+.sb-logo-mark{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,#0a1f3c,#0f3460);
+  border:1px solid rgba(0,210,255,0.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+  box-shadow:0 0 18px rgba(0,210,255,0.18);
+  position:relative;overflow:hidden;
+}
+.sb-logo-mark::after{
+  content:'';position:absolute;top:-50%;left:-50%;
+  width:200%;height:200%;
+  background:linear-gradient(45deg,transparent 40%,rgba(0,210,255,0.15) 50%,transparent 60%);
+  animation:shimmer 4s infinite;
+}
+@keyframes shimmer{0%,100%{transform:translateX(-100%) rotate(45deg)}50%{transform:translateX(100%) rotate(45deg)}}
+
+.sb-brand-name{
+  font-family:'Rajdhani',sans-serif;
+  font-size:13px;font-weight:700;color:var(--text);
+  letter-spacing:0.5px;line-height:1.2;
+}
+.sb-brand-sub{
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px;color:var(--text3);
+  letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;
+}
+
+/* Connection status in sidebar */
+.sb-conn{
+  margin:12px 14px;
+  padding:10px 12px;border-radius:10px;
+  background:rgba(255,176,32,0.06);
+  border:1px solid rgba(255,176,32,0.2);
+  transition:all 0.4s;
+}
+.sb-conn.online{
+  background:rgba(57,255,126,0.06);
+  border-color:rgba(57,255,126,0.25);
+}
+.sb-conn-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:4px;
+}
+.sb-conn-label{
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--text3);
+}
+.sb-conn-badge{
+  display:flex;align-items:center;gap:5px;
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;
+  color:var(--amber);transition:color 0.3s;
+}
+.sb-conn.online .sb-conn-badge{color:var(--green);}
+.sb-conn-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:blink 2s infinite;flex-shrink:0;}
+.sb-conn.online .sb-conn-dot{background:var(--green);box-shadow:0 0 6px var(--green);}
+.sb-conn-ip{
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:var(--cyan2);margin-top:2px;
+  word-break:break-all;
+}
+.sb-conn-port{
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px;color:var(--text3);margin-top:1px;
+}
+
+/* Nav items */
+.sb-nav{
+  flex:1;padding:8px 0;overflow-y:auto;
+  scrollbar-width:none;
+}
+.sb-nav::-webkit-scrollbar{display:none;}
+
+.sb-section-title{
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text3);padding:10px 20px 5px;
+}
+.sb-item{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 20px;cursor:pointer;
+  font-family:'Exo 2',sans-serif;
+  font-size:13px;font-weight:500;
+  color:var(--text2);
+  transition:all 0.2s;
+  border-left:2px solid transparent;
+  position:relative;
+  text-decoration:none;
+}
+.sb-item:hover{
+  color:var(--text);background:rgba(0,210,255,0.04);
+}
+.sb-item.active{
+  color:var(--cyan);background:rgba(0,210,255,0.07);
+  border-left-color:var(--cyan);
+}
+.sb-item-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+.sb-item-badge{
+  margin-left:auto;
+  background:rgba(0,210,255,0.1);border:1px solid rgba(0,210,255,0.2);
+  border-radius:10px;padding:1px 7px;
+  font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cyan);
+}
+
+.sb-footer{
+  padding:14px 20px;border-top:1px solid var(--border);
+}
+.sb-footer-time{
+  font-family:'Share Tech Mono',monospace;
+  font-size:16px;color:var(--cyan);font-weight:500;
+}
+.sb-footer-date{
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;
+  margin-top:2px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════════════════ */
+.main{
+  margin-left:var(--sidebar-w);
+  flex:1;min-height:100vh;
+  padding:24px;
+  max-width:calc(100vw - var(--sidebar-w));
+}
+
+/* Page title bar */
+.page-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:22px;
+  padding-bottom:16px;
+  border-bottom:1px solid var(--border);
+}
+.page-title{
+  font-family:'Rajdhani',sans-serif;
+  font-size:22px;font-weight:700;color:var(--text);
+  display:flex;align-items:center;gap:10px;
+}
+.page-title .pt-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--cyan);box-shadow:0 0 10px var(--cyan);
+  animation:blink 2s infinite;
+}
+.page-sub{
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;
+  margin-top:3px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTIONS
+═══════════════════════════════════════════════════════ */
+.section{display:none;animation:sectionIn 0.4s ease;}
+.section.active{display:block;}
+@keyframes sectionIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════════════════════════════════════════
+   ESP32 CONNECTIVITY BLOCK (top of every page)
+═══════════════════════════════════════════════════════ */
+.conn-block{
+  background:linear-gradient(135deg,rgba(10,20,45,0.9),rgba(6,13,32,0.95));
+  border:1px solid rgba(255,176,32,0.22);
+  border-radius:14px;padding:16px 20px;
+  margin-bottom:20px;position:relative;overflow:hidden;
+  backdrop-filter:blur(16px);transition:border-color 0.4s;
+}
+.conn-block::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--amber),#e07b30);
+  border-radius:14px 0 0 14px;transition:all 0.4s;
+}
+.conn-block.is-online{border-color:rgba(57,255,126,0.22);}
+.conn-block.is-online::before{
+  background:linear-gradient(180deg,var(--green),var(--teal));
+  box-shadow:0 0 14px rgba(57,255,126,0.4);
+}
+
+/* IoT animated pulse behind conn block */
+.conn-pulse{
+  position:absolute;right:20px;top:50%;transform:translateY(-50%);
+  width:80px;height:80px;pointer-events:none;
+}
+.cp-ring{
+  position:absolute;top:50%;left:50%;
+  border-radius:50%;border:1px solid rgba(0,210,255,0.15);
+  transform:translate(-50%,-50%);
+  animation:cpRing 3s ease-out infinite;
+}
+.cp-ring:nth-child(1){width:20px;height:20px;animation-delay:0s;}
+.cp-ring:nth-child(2){width:40px;height:40px;animation-delay:0.6s;}
+.cp-ring:nth-child(3){width:60px;height:60px;animation-delay:1.2s;}
+.cp-ring:nth-child(4){width:78px;height:78px;animation-delay:1.8s;}
+.cp-center{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:10px;height:10px;border-radius:50%;
+  background:var(--amber);box-shadow:0 0 10px var(--amber);
+  animation:blink 1.5s infinite;transition:background 0.4s,box-shadow 0.4s;
+}
+.conn-block.is-online .cp-center{background:var(--green);box-shadow:0 0 12px var(--green);}
+.conn-block.is-online .cp-ring{border-color:rgba(57,255,126,0.2);}
+@keyframes cpRing{0%{opacity:0.8;transform:translate(-50%,-50%) scale(0.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+
+.conn-inner{
+  display:flex;align-items:flex-start;gap:16px;
+  padding-right:100px;
+}
+.conn-icon-wrap{
+  width:42px;height:42px;border-radius:10px;flex-shrink:0;
+  background:rgba(0,210,255,0.08);border:1px solid rgba(0,210,255,0.2);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.conn-info{flex:1;}
+.conn-title{
+  font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.conn-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:2px 10px;border-radius:12px;
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;
+  background:rgba(255,176,32,0.1);border:1px solid rgba(255,176,32,0.3);color:var(--amber);
+  transition:all 0.4s;
+}
+.conn-badge.online{background:rgba(57,255,126,0.1);border-color:rgba(57,255,126,0.3);color:var(--green);}
+.conn-badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink 2s infinite;}
+
+.conn-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px;
+}
+@media(max-width:900px){.conn-grid{grid-template-columns:repeat(3,1fr);}}
+
+.conn-stat{
+  background:rgba(0,0,0,0.3);border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;
+}
+.conn-stat.active-stat{border-color:rgba(0,210,255,0.22);background:rgba(0,210,255,0.03);}
+.cs-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;}
+.cs-val{
+  font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;
+  color:var(--text);line-height:1.2;margin-top:2px;
+}
+.cs-val.v-green{color:var(--green);}
+.cs-val.v-cyan{color:var(--cyan);}
+.cs-val.v-amber{color:var(--amber);}
+.cs-val.v-red{color:var(--red);}
+.cs-val.v-dim{color:var(--text3);font-size:13px;}
+
+.rssi-bars{display:flex;align-items:flex-end;gap:3px;margin-top:3px;height:14px;}
+.rssi-bar{width:5px;border-radius:2px 2px 0 0;background:var(--border);transition:background 0.4s;}
+.rssi-bar.b1{height:4px;}.rssi-bar.b2{height:7px;}.rssi-bar.b3{height:10px;}.rssi-bar.b4{height:13px;}
+.rssi-bar.lit{background:var(--green);box-shadow:0 0 4px rgba(57,255,126,0.5);}
+.rssi-bar.lit-mid{background:var(--amber);}
+.rssi-bar.lit-weak{background:var(--red);}
+
+.conn-offline-msg{
+  display:none;margin-top:10px;padding:8px 12px;
+  background:rgba(255,176,32,0.05);border:1px solid rgba(255,176,32,0.18);
+  border-radius:7px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--amber);
+}
+.conn-block.is-offline .conn-offline-msg{display:block;}
+.conn-block.is-online  .conn-offline-msg{display:none;}
+
+/* Server URL configurator */
+.conn-url-row{
+  display:flex;align-items:center;gap:8px;margin-top:12px;
+}
+.conn-url-input{
+  flex:1;background:rgba(0,0,0,0.4);border:1px solid var(--border);
+  border-radius:7px;padding:7px 12px;
+  font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--cyan);
+  outline:none;transition:border-color 0.2s;
+}
+.conn-url-input:focus{border-color:rgba(0,210,255,0.4);}
+.conn-url-btn{
+  padding:7px 16px;border-radius:7px;
+  background:rgba(0,210,255,0.1);border:1px solid rgba(0,210,255,0.3);
+  color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;white-space:nowrap;
+}
+.conn-url-btn:hover{background:rgba(0,210,255,0.18);box-shadow:var(--glow-c);}
+
+/* ═══════════════════════════════════════════════════════
+   SENSOR CARDS
+═══════════════════════════════════════════════════════ */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;}
+.s3{grid-column:span 3;}.s4{grid-column:span 4;}.s6{grid-column:span 6;}
+.s7{grid-column:span 7;}.s5{grid-column:span 5;}.s8{grid-column:span 8;}
+.s9{grid-column:span 9;}.s12{grid-column:span 12;}
+
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:20px;
+  backdrop-filter:blur(16px);
+  transition:border-color 0.3s,transform 0.3s,box-shadow 0.3s;
+  position:relative;overflow:hidden;
+  animation:fadeUp 0.5s ease backwards;
+}
+.card:hover{border-color:var(--border-hi);transform:translateY(-2px);box-shadow:var(--glow-c);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card:nth-child(1){animation-delay:.04s}.card:nth-child(2){animation-delay:.08s}
+.card:nth-child(3){animation-delay:.12s}.card:nth-child(4){animation-delay:.16s}
+.card:nth-child(5){animation-delay:.20s}.card:nth-child(6){animation-delay:.24s}
+.card-accent{position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0;}
+
+/* Sensor card content */
+.s-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;margin-bottom:12px;
+}
+.si-temp{background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.25);}
+.si-hum{background:rgba(0,210,255,0.1);border:1px solid rgba(0,210,255,0.25);}
+.si-lux{background:rgba(255,176,32,0.1);border:1px solid rgba(255,176,32,0.25);}
+.si-pres{background:rgba(57,255,126,0.1);border:1px solid rgba(57,255,126,0.25);}
+.si-rain{background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);}
+
+.s-label{
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;
+}
+.s-value{font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;line-height:1;}
+.s-unit{font-size:13px;font-weight:400;color:var(--text3);margin-left:2px;}
+.s-trend{display:flex;align-items:center;gap:5px;margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:11px;}
+.trend-up{color:var(--amber);}.trend-down{color:var(--cyan);}.trend-stable{color:var(--text3);}
+.s-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:20px;
+  font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:9px;
+}
+.chip-on{background:rgba(57,255,126,0.1);border:1px solid rgba(57,255,126,0.3);color:var(--green);}
+.chip-off{background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.3);color:var(--red);}
+.chip-rain{background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:var(--purple);}
+.chip-dry{background:rgba(0,255,204,0.1);border:1px solid rgba(0,255,204,0.3);color:var(--teal);}
+
+.temp-c{color:var(--cyan);}.temp-m{color:var(--green);}.temp-w{color:var(--amber);}.temp-h{color:var(--red);}
+
+/* ── PANEL HEADER ── */
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.ph-left{display:flex;align-items:center;gap:11px;}
+.ph-icon{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.pi-ai{background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);}
+.pi-window{background:rgba(57,255,126,0.12);border:1px solid rgba(57,255,126,0.3);}
+.pi-ctrl{background:rgba(0,210,255,0.12);border:1px solid rgba(0,210,255,0.3);}
+.pi-chart{background:rgba(0,255,204,0.12);border:1px solid rgba(0,255,204,0.3);}
+.pi-log{background:rgba(255,176,32,0.12);border:1px solid rgba(255,176,32,0.3);}
+.pi-team{background:rgba(0,210,255,0.12);border:1px solid rgba(0,210,255,0.3);}
+.ph-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--text);}
+.ph-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+
+/* ── AI PANEL ── */
+.ai-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 13px;background:rgba(0,0,0,0.3);
+  border:1px solid var(--border);border-radius:8px;margin-bottom:9px;
+}
+.ai-row-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px;}
+.ai-angle{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;color:var(--cyan);text-shadow:0 0 20px rgba(0,210,255,0.4);}
+
+.conf-bar-wrap{margin:12px 0;}
+.conf-head{display:flex;justify-content:space-between;margin-bottom:6px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);}
+.conf-bar{height:4px;background:rgba(0,0,0,0.5);border-radius:2px;overflow:hidden;}
+.conf-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--teal));border-radius:2px;transition:width 0.6s cubic-bezier(.4,0,.2,1);}
+
+.factor{display:flex;align-items:center;gap:7px;padding:6px 10px;background:rgba(0,0,0,0.2);border-radius:6px;margin-bottom:4px;font-size:12px;color:var(--text2);}
+.factor-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* ── GAUGE CANVAS ── */
+canvas#gaugeCanvas{width:100%;max-height:130px;}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.gauge-angle{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--cyan);text-shadow:0 0 16px rgba(0,210,255,0.4);}
+
+/* ── WINDOW VISUALIZATION ── */
+.window-viz{
+  background:rgba(0,0,0,0.35);border:1px solid var(--border);
+  border-radius:10px;padding:14px;margin-top:14px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.window-viz-title{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;}
+.window-frame{
+  width:120px;height:90px;border:2px solid rgba(0,210,255,0.35);
+  border-radius:6px;position:relative;overflow:hidden;background:rgba(0,0,0,0.5);
+}
+.window-pane{
+  position:absolute;bottom:0;left:0;width:100%;
+  background:rgba(0,210,255,0.15);border-top:2px solid rgba(0,210,255,0.5);
+  transition:height 0.8s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 0 12px rgba(0,210,255,0.2) inset;
+}
+.window-angle-label{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--cyan);text-shadow:0 0 12px rgba(0,210,255,0.4);}
+
+/* ── CONTROL GRID ── */
+.ctrl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.c-btn{
+  padding:13px 6px;border-radius:10px;border:1px solid var(--border);
+  background:rgba(0,0,0,0.3);color:var(--text3);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.3s;
+}
+.c-btn:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 16px rgba(0,210,255,0.15);transform:translateY(-2px);}
+.c-btn.active{background:rgba(0,210,255,0.1);border-color:rgba(0,210,255,0.5);color:var(--cyan);box-shadow:0 0 20px rgba(0,210,255,0.2);}
+.c-btn-ico{font-size:18px;}.c-btn-deg{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;}
+.c-btn-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;}
+
+/* Range slider */
+.slider-wrap{margin-bottom:10px;}
+.slider-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.slider-lbl{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;}
+.slider-val{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--cyan);}
+input[type="range"]{
+  width:100%;height:5px;outline:none;cursor:pointer;
+  -webkit-appearance:none;border-radius:3px;
+  background:linear-gradient(90deg,var(--cyan) var(--rp,66.7%),rgba(0,0,0,0.5) var(--rp,66.7%));
+  border:1px solid var(--border);
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:17px;height:17px;border-radius:50%;
+  background:var(--cyan);box-shadow:0 0 10px rgba(0,210,255,0.6);
+  border:2px solid rgba(255,255,255,0.15);cursor:grab;
+}
+
+.status-notice{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;
+  font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:10px;
+}
+.sn-live{background:rgba(57,255,126,0.07);border:1px solid rgba(57,255,126,0.2);color:var(--green);}
+.sn-offline{background:rgba(255,176,32,0.07);border:1px solid rgba(255,176,32,0.2);color:var(--amber);}
+
+/* ── MANUAL ENV PANEL ── */
+.manual-env-panel{
+  background:var(--card);border:1px solid rgba(255,176,32,0.2);
+  border-radius:14px;padding:20px;margin-bottom:20px;
+  backdrop-filter:blur(16px);position:relative;overflow:hidden;
+}
+.manual-env-panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--amber),#e07b30,var(--amber));
+  border-radius:14px 14px 0 0;
+}
+.manual-env-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0;}
+@media(max-width:900px){.manual-env-grid{grid-template-columns:repeat(2,1fr);}}
+.env-input-group{display:flex;flex-direction:column;gap:6px;}
+.env-input-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;}
+.env-input{
+  background:rgba(0,0,0,0.4);border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;
+  font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--text);outline:none;
+  transition:border-color 0.2s;
+}
+.env-input:focus{border-color:rgba(255,176,32,0.4);}
+.rain-toggle-btn{
+  padding:9px 12px;border-radius:8px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;
+  font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+  transition:all 0.2s;
+}
+.rain-no{background:rgba(0,255,204,0.07);border:1px solid rgba(0,255,204,0.2);color:var(--teal);}
+.rain-yes{background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:var(--purple);}
+.apply-btn{
+  width:100%;padding:11px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(255,176,32,0.18),rgba(255,176,32,0.1));
+  border:1px solid rgba(255,176,32,0.35);color:var(--amber);
+  font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.25s;font-weight:600;
+}
+.apply-btn:hover{background:rgba(255,176,32,0.25);box-shadow:0 0 20px rgba(255,176,32,0.2);transform:translateY(-1px);}
+
+.override-active-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:20px;
+  background:rgba(255,176,32,0.12);border:1px solid rgba(255,176,32,0.35);
+  color:var(--amber);font-family:'Share Tech Mono',monospace;font-size:11px;
+  animation:blink 1.5s infinite;
+}
+
+/* ── MOTOR CONTROL MODE PANEL ── */
+.motor-mode-panel{
+  background:var(--card);border:1px solid rgba(168,85,247,0.18);
+  border-radius:14px;padding:20px;margin-bottom:20px;
+  backdrop-filter:blur(16px);position:relative;overflow:hidden;
+}
+.motor-mode-panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--purple),#9f7aea,var(--purple));
+  border-radius:14px 14px 0 0;
+}
+.motor-mode-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+.motor-mode-opt{
+  padding:13px 15px;border-radius:10px;cursor:pointer;
+  border:1px solid var(--border);background:rgba(0,0,0,0.3);
+  transition:all 0.25s;display:flex;align-items:center;gap:11px;
+}
+.motor-mode-opt input[type="radio"]{display:none;}
+.motor-mode-opt.selected-ai{border-color:rgba(168,85,247,0.45);background:rgba(168,85,247,0.08);box-shadow:0 0 18px rgba(168,85,247,0.15);}
+.motor-mode-opt.selected-manual{border-color:rgba(0,210,255,0.45);background:rgba(0,210,255,0.08);box-shadow:0 0 18px rgba(0,210,255,0.15);}
+.motor-opt-radio{
+  width:17px;height:17px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all 0.2s;
+}
+.selected-ai .motor-opt-radio{border-color:var(--purple);background:rgba(168,85,247,0.2);box-shadow:0 0 8px rgba(168,85,247,0.4);}
+.motor-opt-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--purple);opacity:0;transition:opacity 0.2s;}
+.selected-ai .motor-opt-radio::after{opacity:1;}
+.selected-manual .motor-opt-radio{border-color:var(--cyan);background:rgba(0,210,255,0.2);box-shadow:0 0 8px rgba(0,210,255,0.4);}
+.selected-manual .motor-opt-radio::after{background:var(--cyan);opacity:1;}
+.motor-opt-label{font-size:13px;font-weight:600;color:var(--text);font-family:'Rajdhani',sans-serif;}
+.motor-opt-sub{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.5px;margin-top:2px;}
+.motor-opt-icon{font-size:21px;}
+
+.ai-decision-box{
+  padding:11px 15px;border-radius:9px;
+  background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.2);
+  margin-top:9px;transition:all 0.3s;
+}
+.ai-decision-text{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--purple);display:flex;align-items:center;gap:8px;}
+.ai-suggestion-box{
+  padding:9px 13px;border-radius:8px;
+  background:rgba(0,210,255,0.05);border:1px solid rgba(0,210,255,0.15);
+  margin-top:7px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);
+}
+.ai-suggestion-box span{color:var(--cyan);font-weight:600;}
+
+.manual-angle-ctrl{margin-top:13px;display:none;}
+.manual-angle-ctrl.visible{display:block;}
+.set-angle-btn{
+  margin-top:10px;width:100%;padding:10px;
+  background:linear-gradient(135deg,rgba(0,210,255,0.15),rgba(0,210,255,0.08));
+  border:1px solid rgba(0,210,255,0.35);border-radius:9px;
+  color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.25s;
+}
+.set-angle-btn:hover{background:rgba(0,210,255,0.2);box-shadow:0 0 16px rgba(0,210,255,0.2);transform:translateY(-1px);}
+
+/* ── CHARTS ── */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:13px;}
+.charts-row.three{grid-template-columns:1fr 1fr 1fr;}
+.chart-box{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:10px;padding:13px;}
+.chart-box.full{grid-column:span 2;}
+.chart-hd{
+  display:flex;align-items:center;gap:6px;
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px;
+}
+.chart-box canvas{max-height:175px;}
+
+/* ── DATA TABLE ── */
+.data-table-wrap{overflow-x:auto;margin-top:13px;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:11px;}
+thead th{
+  padding:10px 14px;background:rgba(0,0,0,0.4);color:var(--text3);
+  text-align:left;letter-spacing:1px;text-transform:uppercase;font-size:9px;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid rgba(0,210,255,0.05);transition:background 0.15s;}
+tbody tr:hover{background:rgba(0,210,255,0.03);}
+tbody tr:last-child{border-bottom:none;}
+tbody td{padding:9px 14px;color:var(--text2);white-space:nowrap;}
+.td-time{color:var(--text3);}.td-angle{color:var(--cyan);font-weight:600;}
+.badge-live{color:var(--green);}.badge-manual{color:var(--amber);}
+
+/* ── EVENT LOG ── */
+.log-list{
+  max-height:300px;overflow-y:auto;margin-top:11px;
+  scrollbar-width:thin;scrollbar-color:rgba(0,210,255,0.2) transparent;
+}
+.log-list::-webkit-scrollbar{width:3px;}
+.log-list::-webkit-scrollbar-thumb{background:rgba(0,210,255,0.2);border-radius:2px;}
+.log-item{
+  display:flex;align-items:flex-start;gap:9px;
+  padding:9px 11px;border-radius:7px;margin-bottom:3px;
+  border:1px solid transparent;animation:slideIn 0.3s ease;transition:all 0.2s;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.log-item:hover{border-color:var(--border);}
+.log-item.success{background:rgba(57,255,126,0.04);border-color:rgba(57,255,126,0.1);}
+.log-item.info{background:rgba(0,210,255,0.04);border-color:rgba(0,210,255,0.1);}
+.log-item.warning{background:rgba(255,176,32,0.04);border-color:rgba(255,176,32,0.1);}
+.log-item.ai{background:rgba(168,85,247,0.04);border-color:rgba(168,85,247,0.1);}
+.log-item.error{background:rgba(255,77,109,0.04);border-color:rgba(255,77,109,0.1);}
+.log-ico{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.li-success{background:rgba(57,255,126,0.15);}.li-info{background:rgba(0,210,255,0.15);}
+.li-warning{background:rgba(255,176,32,0.15);}.li-ai{background:rgba(168,85,247,0.15);}
+.li-error{background:rgba(255,77,109,0.15);}
+.log-body{flex:1;}
+.log-ts{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);margin-bottom:2px;}
+.log-msg{font-size:11px;color:var(--text2);font-family:'Share Tech Mono',monospace;}
+.log-footer{
+  display:flex;justify-content:space-between;align-items:center;margin-top:9px;
+  font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);
+  padding-top:8px;border-top:1px solid var(--border);
+}
+
+/* ── FAULT PANEL ── */
+.fault-panel{
+  margin-bottom:20px;border-radius:14px;
+  border:1px solid var(--border);overflow:hidden;transition:all 0.4s;
+}
+.fault-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 18px;background:rgba(0,0,0,0.35);border-bottom:1px solid var(--border);
+}
+.fault-title-row{display:flex;align-items:center;gap:9px;}
+.fault-icon{font-size:17px;}
+.fault-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--text);}
+.fault-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.fault-badge{
+  display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:12px;
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  transition:all 0.3s;
+}
+.fault-badge.nominal{background:rgba(57,255,126,0.08);border:1px solid rgba(57,255,126,0.2);color:var(--green);}
+.fault-badge.alert{background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.3);color:var(--red);animation:blink 2s infinite;}
+.fault-body{padding:12px 18px;}
+.fault-nominal{
+  display:flex;align-items:center;gap:8px;
+  font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green);
+  padding:10px 14px;background:rgba(57,255,126,0.04);border-radius:8px;border:1px solid rgba(57,255,126,0.1);
+}
+.fault-list{display:flex;flex-direction:column;gap:6px;}
+.fault-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:9px 12px;background:rgba(255,77,109,0.04);border:1px solid rgba(255,77,109,0.12);
+  border-radius:8px;
+}
+.fault-item-icon{font-size:16px;flex-shrink:0;}
+.fault-item-msg{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red);}
+.fault-item-tag{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;margin-top:2px;}
+
+/* ── TEAM SECTION ── */
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-top:13px;}
+.member-card{
+  background:rgba(0,0,0,0.3);border:1px solid var(--border);
+  border-radius:12px;padding:20px;text-align:center;
+  transition:all 0.3s;position:relative;overflow:hidden;
+}
+.member-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--teal));opacity:0;transition:opacity 0.3s;
+}
+.member-card:hover{border-color:var(--border-hi);transform:translateY(-3px);box-shadow:var(--glow-c);}
+.member-card:hover::before{opacity:1;}
+.member-avatar{
+  width:62px;height:62px;border-radius:50%;
+  background:linear-gradient(135deg,var(--bg3),#0a1f3c);
+  border:2px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:26px;margin:0 auto 11px;box-shadow:0 0 20px rgba(0,210,255,0.1);
+}
+.member-name{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.member-role{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;}
+.member-detail{font-size:11px;color:var(--text3);font-family:'Share Tech Mono',monospace;}
+.project-info{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:13px;}
+.info-card{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:10px;padding:15px;}
+.info-card h4{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+.info-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(0,210,255,0.05);font-family:'Share Tech Mono',monospace;font-size:10px;}
+.info-item:last-child{border-bottom:none;}
+.info-key{color:var(--text3);}.info-val{color:var(--text2);}
+
+/* ── MISC UTILS ── */
+.divider{height:1px;background:var(--border);margin:15px 0;}
+.btn-sm{
+  padding:5px 12px;border-radius:6px;border:none;
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-danger{background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.3);color:var(--red);}
+.btn-danger:hover{background:rgba(255,77,109,0.2);}
+.btn-export{background:rgba(0,210,255,0.1);border:1px solid rgba(0,210,255,0.3);color:var(--cyan);}
+.btn-export:hover{background:rgba(0,210,255,0.2);}
+
+.uptime-bar{display:flex;gap:3px;margin-top:8px;}
+.up-seg{flex:1;height:20px;border-radius:3px;transition:all 0.2s;cursor:pointer;}
+.up-seg:hover{transform:scaleY(1.3);}
+
+.glow-update{animation:glowFlash 0.5s ease;}
+@keyframes glowFlash{0%{text-shadow:0 0 24px currentColor}100%{text-shadow:none}}
+@keyframes valPulse{0%{filter:brightness(1)}50%{filter:brightness(1.6)}100%{filter:brightness(1)}}
+.val-pulse{animation:valPulse 0.4s ease;}
+
+/* ── ANALYTICS SECTION - Graphical Visualizations ── */
+.analytics-hero{
+  display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px;
+}
+.stat-gauge-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px;text-align:center;position:relative;overflow:hidden;
+  transition:all 0.3s;
+}
+.stat-gauge-card:hover{border-color:var(--border-hi);transform:translateY(-2px);}
+.sgc-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.sgc-canvas{width:100%;max-height:100px;}
+.sgc-val{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;margin-top:4px;}
+.sgc-unit{font-size:12px;color:var(--text3);margin-left:2px;}
+
+/* Heatmap style bar for analytics */
+.heat-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.heat-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);width:80px;flex-shrink:0;}
+.heat-bar-wrap{flex:1;height:16px;background:rgba(0,0,0,0.3);border-radius:4px;overflow:hidden;}
+.heat-bar{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+.heat-val{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2);width:55px;text-align:right;}
+
+/* ── FOOTER ── */
+footer{
+  border-top:1px solid var(--border);margin-top:50px;padding:28px 0;
+  text-align:center;position:relative;z-index:1;
+}
+.footer-line{width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);margin:0 auto 22px;}
+.footer-box{
+  display:inline-block;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:22px 38px;
+}
+.footer-team{
+  font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:800;letter-spacing:3px;
+  background:linear-gradient(135deg,var(--cyan),var(--teal));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;
+}
+.footer-detail{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);line-height:2;letter-spacing:0.5px;}
+.footer-detail .hl{color:var(--text2);}
+
+/* ── ANIMATED BACKGROUND WAVES (in pages) ── */
+.wave-bg{
+  position:fixed;bottom:0;left:0;right:0;
+  pointer-events:none;z-index:0;opacity:0.12;
+  height:200px;
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){
+  .s3,.s4{grid-column:span 6;}
+  .s7,.s5{grid-column:span 12;}
+  .analytics-hero{grid-template-columns:1fr 1fr;}
+  .team-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:768px){
+  :root{--sidebar-w:0px;}
+  .sidebar{transform:translateX(-220px);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .s3,.s4,.s6{grid-column:span 12;}
+  .ctrl-grid{grid-template-columns:repeat(2,1fr);}
+  .charts-row,.charts-row.three{grid-template-columns:1fr;}
+  .project-info{grid-template-columns:1fr;}
+  .conn-grid{grid-template-columns:repeat(2,1fr);}
+  .analytics-hero{grid-template-columns:1fr 1fr;}
+  .team-grid{grid-template-columns:1fr 1fr;}
+  .manual-env-grid{grid-template-columns:1fr 1fr;}
+}
+
+/* IoT connecting dots decoration */
+.iot-deco{
+  position:absolute;top:0;right:0;width:120px;height:120px;
+  pointer-events:none;overflow:hidden;opacity:0.3;
+}
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="scanlines"></div>
+
+<!-- ══════════════════════════════════════════
+     LANDING PAGE
+══════════════════════════════════════════ -->
+<div id="landing">
+  <div class="landing-waves">
+    <svg class="lw-svg" viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0,60 C240,120 480,0 720,60 C960,120 1200,0 1440,60 L1440,120 L0,120 Z" fill="rgba(0,210,255,0.15)"/>
+    </svg>
+    <svg class="lw-svg" viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0,40 C360,100 720,0 1080,60 C1260,90 1380,30 1440,50 L1440,120 L0,120 Z" fill="rgba(0,255,204,0.12)"/>
+    </svg>
+    <svg class="lw-svg" viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0,80 C180,20 360,100 540,60 C720,20 900,80 1080,40 C1260,0 1380,70 1440,50 L1440,120 L0,120 Z" fill="rgba(57,255,126,0.08)"/>
+    </svg>
+  </div>
+
+  <div class="landing-rings">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="orbit-dot"></div>
+    <div class="orbit-dot"></div>
+    <div class="orbit-dot"></div>
+  </div>
+
+  <div class="landing-content">
+    <div class="landing-badge">
+      <span class="lb-dot"></span>
+      TEAM INNOVATEX · MINORPROJECT@2026 · CSE-DS
+    </div>
+
+    <h1 class="landing-title">
+      AI-Powered Smart Window<br>Ventilation &amp; Environmental Control
+    </h1>
+
+    <p class="landing-intro">
+      An <strong>ESP32-driven IoT system</strong> that uses real-time environmental sensing — temperature, humidity, light and rain — to intelligently control window ventilation angles via AI decision logic. Live data flows directly from hardware to this dashboard with zero simulated values.
+    </p>
+
+    <a class="landing-enter" onclick="enterApp()">
+      Enter Dashboard <span class="enter-arrow">→</span>
+    </a>
+
+    <div class="landing-features">
+      <div class="lf-item"><div class="dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan)"></div>AI DECISION ENGINE</div>
+      <div class="lf-item"><div class="dot" style="background:var(--teal);box-shadow:0 0 6px var(--teal)"></div>REAL-TIME ESP32 DATA</div>
+      <div class="lf-item"><div class="dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></div>AUTO VENTILATION</div>
+      <div class="lf-item"><div class="dot" style="background:var(--amber);box-shadow:0 0 6px var(--amber)"></div>FAULT DETECTION</div>
+      <div class="lf-item"><div class="dot" style="background:var(--purple);box-shadow:0 0 6px var(--purple)"></div>ANALYTICS</div>
+    </div>
+  </div>
+</div>
+
+<!-- Ambient background waves in app -->
+<svg class="wave-bg" viewBox="0 0 1440 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="wg1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00d2ff" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#00d2ff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#00ffcc" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <path d="M0,100 C240,180 480,20 720,100 C960,180 1200,20 1440,100 L1440,200 L0,200 Z" fill="url(#wg1)"/>
+</svg>
+
+<!-- ══════════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">🌬️</div>
+      <div>
+        <div class="sb-brand-name">SmartVent AI</div>
+        <div class="sb-brand-sub">Environmental Control</div>
+      </div>
+    </div>
+
+    <!-- Live connection status in sidebar -->
+    <div class="sb-conn" id="sbConn">
+      <div class="sb-conn-row">
+        <div class="sb-conn-label">ESP32 Status</div>
+        <div class="sb-conn-badge">
+          <div class="sb-conn-dot" id="sbDot"></div>
+          <span id="sbStatus">OFFLINE</span>
+        </div>
+      </div>
+      <div class="sb-conn-ip" id="sbIP">—</div>
+      <div class="sb-conn-port" id="sbPort">Port: 5000</div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="sb-section-title">Navigation</div>
+      <div class="sb-item active" onclick="showSection('dashboard')" id="nav-dashboard">
+        <span class="sb-item-icon">⚡</span> Dashboard
+      </div>
+      <div class="sb-item" onclick="showSection('analytics')" id="nav-analytics">
+        <span class="sb-item-icon">📊</span> Analysis
+      </div>
+      <div class="sb-item" onclick="showSection('manual')" id="nav-manual">
+        <span class="sb-item-icon">🎮</span> Manual Control
+      </div>
+      <div class="sb-item" onclick="showSection('records')" id="nav-records">
+        <span class="sb-item-icon">📁</span> Record Log
+        <span class="sb-item-badge" id="sb-rec-badge">0</span>
+      </div>
+      <div class="sb-section-title" style="margin-top:8px">Info</div>
+      <div class="sb-item" onclick="showSection('team')" id="nav-team">
+        <span class="sb-item-icon">👥</span> Team Details
+      </div>
+    </nav>
+
+    <div class="sb-footer">
+      <div class="sb-footer-time" id="tTime">--:--:--</div>
+      <div class="sb-footer-date" id="tDate">--- -- ----</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ════ ESP32 CONNECTIVITY BLOCK (shown on all pages) ════ -->
+    <div class="conn-block is-offline" id="connBlock">
+      <div class="conn-pulse">
+        <div class="cp-ring"></div>
+        <div class="cp-ring"></div>
+        <div class="cp-ring"></div>
+        <div class="cp-ring"></div>
+        <div class="cp-center" id="cpCenter"></div>
+      </div>
+      <div class="conn-inner">
+        <div class="conn-icon-wrap">📡</div>
+        <div class="conn-info">
+          <div class="conn-title">
+            ESP32 Hardware Link
+            <span class="conn-badge offline" id="connBadge">
+              <span class="conn-badge-dot"></span>
+              <span id="connBadgeTxt">OFFLINE</span>
+            </span>
+          </div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px">
+            WiFi REST Bridge — Flask API Server
+          </div>
+
+          <div class="conn-grid" style="margin-top:10px">
+            <div class="conn-stat" id="cs-status">
+              <div class="cs-label">Device</div>
+              <div class="cs-val v-dim" id="cs-device">—</div>
+            </div>
+            <div class="conn-stat" id="cs-ssid-box">
+              <div class="cs-label">WiFi SSID</div>
+              <div class="cs-val v-cyan" id="cs-ssid">-</div>
+            </div>
+            <div class="conn-stat" id="cs-ip-box">
+              <div class="cs-label">IP Address</div>
+              <div class="cs-val v-cyan" id="cs-ip">-</div>
+            </div>
+            <div class="conn-stat" id="cs-rssi-box">
+              <div class="cs-label">Signal (RSSI)</div>
+              <div class="cs-val v-green" id="cs-rssi">—</div>
+              <div class="rssi-bars" id="rssiVisual">
+                <div class="rssi-bar b1" id="rb1"></div>
+                <div class="rssi-bar b2" id="rb2"></div>
+                <div class="rssi-bar b3" id="rb3"></div>
+                <div class="rssi-bar b4" id="rb4"></div>
+              </div>
+            </div>
+            <div class="conn-stat" id="cs-ping-box">
+              <div class="cs-label">Latency</div>
+              <div class="cs-val v-green" id="cs-ping">—</div>
+            </div>
+          </div>
+
+          <div class="conn-url-row">
+            <input class="conn-url-input" type="text" id="serverUrlInput" value="http://localhost:5000" placeholder="http://192.168.x.x:5000">
+            <button class="conn-url-btn" onclick="updateServerUrl()">Connect</button>
+            <button class="conn-url-btn" onclick="setMode('live')" style="background:rgba(57,255,126,0.08);border-color:rgba(57,255,126,0.25);color:var(--green)">📡 Live</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="conn-offline-msg">
+        ⚠️ ESP32 not reachable at <strong id="offlineUrlLabel">localhost:5000</strong> — Enter your ESP32 IP above and click Connect, then switch to 📡 Live mode.
+      </div>
+    </div>
+
+    <!-- ════ FAULT DETECTION PANEL ════ -->
+    <div class="fault-panel" id="faultPanel">
+      <div class="fault-header">
+        <div class="fault-title-row">
+          <span class="fault-icon">🔍</span>
+          <div>
+            <div class="fault-title">Fault Detection System</div>
+            <div class="fault-sub">Continuous Sensor Health Monitor</div>
+          </div>
+        </div>
+        <div class="fault-badge nominal" id="faultBadge">
+          <span>●</span> <span id="faultBadgeTxt">AWAITING DATA</span>
+        </div>
+      </div>
+      <div class="fault-body">
+        <div class="fault-nominal" id="faultNominal">⏳ Waiting for ESP32 connection — Connect to view live sensor health</div>
+        <div class="fault-list" id="faultList" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SECTION: DASHBOARD
+    ══════════════════════════════════════ -->
+    <div id="sec-dashboard" class="section active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">
+            <div class="pt-dot"></div> Live Dashboard
+          </div>
+          <div class="page-sub">Real-time environmental telemetry · ESP32 data only</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3)">
+            Readings: <span id="readingsStat" style="color:var(--cyan)">0</span>
+          </div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3)">
+            Uptime: <span id="uptimeStat" style="color:var(--teal)">0m</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <!-- SENSOR CARDS -->
+        <div class="card s3">
+          <div class="card-accent" style="background:linear-gradient(90deg,#ff4d6d,#ff8c00)"></div>
+          <div class="s-icon si-temp">🌡️</div>
+          <div class="s-label">Temperature</div>
+          <div class="s-value temp-w" id="tempVal">
+            <span id="tempNum">—</span><span class="s-unit">°C</span>
+          </div>
+          <div class="s-trend trend-stable" id="tempTrend">→ Awaiting data</div>
+        </div>
+
+        <div class="card s3">
+          <div class="card-accent" style="background:linear-gradient(90deg,#00d2ff,#0af)"></div>
+          <div class="s-icon si-hum">💧</div>
+          <div class="s-label">Humidity</div>
+          <div class="s-value" style="color:var(--cyan)" id="humVal">
+            <span id="humNum">—</span><span class="s-unit">%</span>
+          </div>
+          <div class="s-trend trend-stable" id="humTrend">→ Awaiting data</div>
+        </div>
+
+        <div class="card s3">
+          <div class="card-accent" style="background:linear-gradient(90deg,#ffb020,#ff8c00)"></div>
+          <div class="s-icon si-lux">☀️</div>
+          <div class="s-label">Light (LDR)</div>
+          <div class="s-value" style="color:var(--amber)">
+            <span id="luxNum">—</span><span class="s-unit">lux</span>
+          </div>
+          <div class="s-trend trend-stable" id="luxTrend">→ Awaiting data</div>
+        </div>
+
+        <div class="card s3">
+          <div class="card-accent" style="background:linear-gradient(90deg,#a855f7,#f472b6)"></div>
+          <div class="s-icon si-rain">🌧️</div>
+          <div class="s-label">Rain Sensor</div>
+          <div class="s-value" id="rainVal" style="color:var(--purple);font-size:18px;padding-top:8px">—</div>
+          <div class="s-chip chip-dry" id="rainBadge">● Awaiting</div>
+        </div>
+
+        <!-- PIR PRESENCE -->
+        <div class="card s3">
+          <div class="card-accent" style="background:linear-gradient(90deg,#39ff7e,#00ffcc)"></div>
+          <div class="s-icon si-pres">👁️</div>
+          <div class="s-label">Presence (PIR)</div>
+          <div class="s-value" id="presVal" style="color:var(--green);font-size:18px;padding-top:8px">—</div>
+          <div class="s-chip chip-off" id="presBadge">● Awaiting</div>
+        </div>
+
+        <!-- AI DECISION PANEL -->
+        <div class="card s9">
+          <div class="card-accent" style="background:linear-gradient(90deg,#a855f7,#00d2ff,#00ffcc)"></div>
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon pi-ai">🧠</div>
+              <div>
+                <div class="ph-title">AI Decision Engine</div>
+                <div class="ph-sub">Rule-based ventilation logic</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">
+              CONFIDENCE: <span id="confPct" style="color:var(--cyan)">—</span>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start">
+            <div class="gauge-wrap">
+              <canvas id="gaugeCanvas" width="180" height="110"></canvas>
+              <div class="gauge-angle" id="gaugeAngle">—</div>
+            </div>
+            <div>
+              <div class="ai-row">
+                <span class="ai-row-label">OPTIMAL ANGLE</span>
+                <span class="ai-angle" id="aiAngle">—</span>
+              </div>
+              <div class="conf-bar-wrap">
+                <div class="conf-head">
+                  <span>Confidence Score</span>
+                  <span id="confPct2">—</span>
+                </div>
+                <div class="conf-bar"><div class="conf-fill" id="confBar" style="width:0%"></div></div>
+              </div>
+              <div id="factorsList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIVE CHARTS -->
+        <div class="card s12">
+          <div class="card-accent" style="background:linear-gradient(90deg,#00ffcc,#00d2ff)"></div>
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon pi-chart">📈</div>
+              <div>
+                <div class="ph-title">Live Sensor Trends</div>
+                <div class="ph-sub">Real-time rolling 50-point history from ESP32</div>
+              </div>
+            </div>
+          </div>
+          <div class="charts-row">
+            <div class="chart-box">
+              <div class="chart-hd">
+                <span style="width:8px;height:8px;border-radius:50%;background:#ff4d6d;display:inline-block"></span>Temp °C &nbsp;
+                <span style="width:8px;height:8px;border-radius:50%;background:#39ff7e;display:inline-block"></span>Humidity %
+              </div>
+              <canvas id="chartTH"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-hd">
+                <span style="width:8px;height:8px;border-radius:50%;background:#a855f7;display:inline-block"></span>Window Angle °
+              </div>
+              <canvas id="chartAngle"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- EVENT LOG -->
+        <div class="card s12">
+          <div class="card-accent" style="background:linear-gradient(90deg,#ffb020,#ff4d6d)"></div>
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon pi-log">📋</div>
+              <div>
+                <div class="ph-title">System Event Log</div>
+                <div class="ph-sub">Real-Time Activity Timeline</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn-sm btn-export" onclick="exportLog()">Export</button>
+              <button class="btn-sm btn-danger" onclick="clearLog()">Clear</button>
+            </div>
+          </div>
+          <div class="log-list" id="eventLog"></div>
+          <div class="log-footer">
+            <span>⚡ Auto-updating — <span id="logCount">0</span> events</span>
+            <span id="lastUpdate" style="color:var(--text3)">Last: —</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SECTION: ANALYTICS
+    ══════════════════════════════════════ -->
+    <div id="sec-analytics" class="section">
+      <div class="page-header">
+        <div>
+          <div class="page-title">
+            <div class="pt-dot" style="background:var(--teal);box-shadow:0 0 10px var(--teal)"></div> Environmental Analysis
+          </div>
+          <div class="page-sub">Visual sensor data analysis · statistics &amp; trends</div>
+        </div>
+      </div>
+
+      <!-- 4 animated mini-gauges -->
+      <div class="analytics-hero">
+        <div class="stat-gauge-card">
+          <div class="sgc-label">Temperature</div>
+          <canvas id="sgcTemp" class="sgc-canvas" width="120" height="80"></canvas>
+          <div class="sgc-val" style="color:var(--red)" id="sgcTempVal">—<span class="sgc-unit">°C</span></div>
+        </div>
+        <div class="stat-gauge-card">
+          <div class="sgc-label">Humidity</div>
+          <canvas id="sgcHum" class="sgc-canvas" width="120" height="80"></canvas>
+          <div class="sgc-val" style="color:var(--cyan)" id="sgcHumVal">—<span class="sgc-unit">%</span></div>
+        </div>
+        <div class="stat-gauge-card">
+          <div class="sgc-label">Light Level</div>
+          <canvas id="sgcLux" class="sgc-canvas" width="120" height="80"></canvas>
+          <div class="sgc-val" style="color:var(--amber)" id="sgcLuxVal">—<span class="sgc-unit">lux</span></div>
+        </div>
+        <div class="stat-gauge-card">
+          <div class="sgc-label">Window Angle</div>
+          <canvas id="sgcAngle" class="sgc-canvas" width="120" height="80"></canvas>
+          <div class="sgc-val" style="color:var(--purple)" id="sgcAngleVal">—<span class="sgc-unit">°</span></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card s12">
+          <div class="card-accent" style="background:linear-gradient(90deg,#00ffcc,#00d2ff,#a855f7)"></div>
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon pi-chart">📊</div>
+              <div>
+                <div class="ph-title">Full Sensor History Charts</div>
+                <div class="ph-sub">All readings from ESP32 this session</div>
+              </div>
+            </div>
+          </div>
+          <div class="charts-row three">
+            <div class="chart-box">
+              <div class="chart-hd"><span style="width:8px;height:8px;border-radius:50%;background:#ff4d6d;display:inline-block"></span> Temperature (°C)</div>
+              <canvas id="chartTempLong"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-hd"><span style="width:8px;height:8px;border-radius:50%;background:#00d2ff;display:inline-block"></span> Humidity (%)</div>
+              <canvas id="chartHumLong"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-hd"><span style="width:8px;height:8px;border-radius:50%;background:#ffb020;display:inline-block"></span> Light Level (lux)</div>
+              <canvas id="chartLuxLong"></canvas>
+            </div>
+          </div>
+          <div class="charts-row" style="margin-top:13px">
+            <div class="chart-box full">
+              <div class="chart-hd"><span style="width:8px;height:8px;border-radius:50%;background:#a855f7;display:inline-block"></span> Window Angle History (°)</div>
+              <canvas id="chartAngleLong" style="max-height:130px"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATS + HEAT BARS -->
+        <div class="card s6">
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon pi-chart">📉</div>
+              <div><div class="ph-title">Session Statistics</div><div class="ph-sub">Min · Max · Avg from ESP32</div></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+            <div class="info-card" style="background:rgba(255,77,109,0.05);border-color:rgba(255,77,109,0.15)">
+              <h4 style="color:var(--red)">🌡️ Temperature</h4>
+              <div class="info-item"><span class="info-key">Min</span><span class="info-val" id="statTmin">—</span></div>
+              <div class="info-item"><span class="info-key">Max</span><span class="info-val" id="statTmax">—</span></div>
+              <div class="info-item"><span class="info-key">Avg</span><span class="info-val" id="statTavg">—</span></div>
+            </div>
+            <div class="info-card" style="background:rgba(0,210,255,0.05);border-color:rgba(0,210,255,0.15)">
+              <h4 style="color:var(--cyan)">💧 Humidity</h4>
+              <div class="info-item"><span class="info-key">Min</span><span class="info-val" id="statHmin">—</span></div>
+              <div class="info-item"><span class="info-key">Max</span><span class="info-val" id="statHmax">—</span></div>
+              <div class="info-item"><span class="info-key">Avg</span><span class="info-val" id="statHavg">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Relative Intensity Heat Bar -->
+        <div class="card s6">
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon pi-chart">🌡️</div>
+              <div><div class="ph-title">Sensor Intensity View</div><div class="ph-sub">Normalized relative levels</div></div>
+            </div>
+          </div>
+          <div id="heatBarWrap" style="margin-top:12px">
+            <div class="heat-row">
+              <div class="heat-label">TEMP</div>
+              <div class="heat-bar-wrap"><div class="heat-bar" id="hbTemp" style="width:0%;background:linear-gradient(90deg,#ff4d6d,#ff8c00)"></div></div>
+              <div class="heat-val" id="hbTempV">—</div>
+            </div>
+            <div class="heat-row">
+              <div class="heat-label">HUMIDITY</div>
+              <div class="heat-bar-wrap"><div class="heat-bar" id="hbHum" style="width:0%;background:linear-gradient(90deg,#00d2ff,#0af)"></div></div>
+              <div class="heat-val" id="hbHumV">—</div>
+            </div>
+            <div class="heat-row">
+              <div class="heat-label">LIGHT</div>
+              <div class="heat-bar-wrap"><div class="heat-bar" id="hbLux" style="width:0%;background:linear-gradient(90deg,#ffb020,#ff8c00)"></div></div>
+              <div class="heat-val" id="hbLuxV">—</div>
+            </div>
+            <div class="heat-row">
+              <div class="heat-label">WINDOW °</div>
+              <div class="heat-bar-wrap"><div class="heat-bar" id="hbAngle" style="width:0%;background:linear-gradient(90deg,#a855f7,#00d2ff)"></div></div>
+              <div class="heat-val" id="hbAngleV">—</div>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3)">ESP32 live segments</span>
+            </div>
+            <div class="uptime-bar" id="uptimeBar"></div>
+            <div style="display:flex;justify-content:space-between;margin-top:10px">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2)">Total: <span id="totalReadings" style="color:var(--cyan)">0</span></span>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2)">Live: <span id="liveReadings" style="color:var(--green)">0</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SECTION: MANUAL CONTROL
+    ══════════════════════════════════════ -->
+    <div id="sec-manual" class="section">
+      <div class="page-header">
+        <div>
+          <div class="page-title">
+            <div class="pt-dot" style="background:var(--amber);box-shadow:0 0 10px var(--amber)"></div> Manual Control
+          </div>
+          <div class="page-sub">Override AI decisions · Set window angle directly</div>
+        </div>
+        <div id="overrideActiveBadge" style="display:none">
+          <span class="override-active-badge">⚡ OVERRIDE ACTIVE</span>
+        </div>
+      </div>
+
+      <!-- Manual Env Override -->
+      <div class="manual-env-panel" id="manualEnvPanel">
+        <div class="ph">
+          <div class="ph-left">
+            <div class="ph-icon" style="background:rgba(255,176,32,0.12);border:1px solid rgba(255,176,32,0.3)">🎮</div>
+            <div>
+              <div class="ph-title">Manual Environment Input</div>
+              <div class="ph-sub">Enter sensor values manually when ESP32 is offline</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--amber);background:rgba(255,176,32,0.05);border:1px solid rgba(255,176,32,0.15);border-radius:7px;padding:8px 12px;margin-bottom:14px;">
+          ⚠️ Manual mode uses your input values to drive the AI decision engine. No fake data is generated — only your entered values.
+        </div>
+        <div class="manual-env-grid">
+          <div class="env-input-group">
+            <label class="env-input-label">🌡️ Temperature (°C)</label>
+            <input class="env-input" type="number" id="envTemp" min="0" max="60" step="0.1" placeholder="e.g. 29.5">
+          </div>
+          <div class="env-input-group">
+            <label class="env-input-label">💧 Humidity (%)</label>
+            <input class="env-input" type="number" id="envHum" min="0" max="100" step="1" placeholder="e.g. 65">
+          </div>
+          <div class="env-input-group">
+            <label class="env-input-label">☀️ LDR / Light (lux)</label>
+            <input class="env-input" type="number" id="envLdr" min="0" max="1000" step="1" placeholder="e.g. 680">
+          </div>
+          <div class="env-input-group rain-toggle-wrap">
+            <label class="env-input-label">🌧️ Rain Sensor</label>
+            <button class="rain-toggle-btn rain-no" id="rainToggleBtn" onclick="toggleRainOverride()">
+              <span id="rainToggleIcon">☀️</span>
+              <span id="rainToggleTxt">DRY / NO RAIN</span>
+            </button>
+          </div>
+        </div>
+        <button class="apply-btn" onclick="applyManualEnv()">
+          <span>⚡</span> Apply Manual Values & Run AI
+        </button>
+      </div>
+
+      <!-- Motor Control Mode -->
+      <div class="motor-mode-panel" id="motorModePanel">
+        <div class="ph">
+          <div class="ph-left">
+            <div class="ph-icon" style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3)">⚙️</div>
+            <div>
+              <div class="ph-title">Window Motor Authority</div>
+              <div class="ph-sub">AI automatic vs Manual override</div>
+            </div>
+          </div>
+        </div>
+        <div class="motor-mode-options">
+          <div class="motor-mode-opt selected-ai" id="motorOptAI" onclick="setMotorMode('ai')">
+            <input type="radio" name="motorMode" checked>
+            <div class="motor-opt-radio"></div>
+            <div class="motor-opt-icon">🧠</div>
+            <div>
+              <div class="motor-opt-label">AI Control</div>
+              <div class="motor-opt-sub">Automatic angle decisions</div>
+            </div>
+          </div>
+          <div class="motor-mode-opt" id="motorOptManual" onclick="setMotorMode('manual')">
+            <input type="radio" name="motorMode">
+            <div class="motor-opt-radio"></div>
+            <div class="motor-opt-icon">🎮</div>
+            <div>
+              <div class="motor-opt-label">Manual Control</div>
+              <div class="motor-opt-sub">User sets angle directly</div>
+            </div>
+          </div>
+        </div>
+        <div class="ai-decision-box" id="aiDecisionBox">
+          <div class="ai-decision-text">🧠 <span id="aiDecisionText">AI Decision: Waiting for data...</span></div>
+        </div>
+        <div class="ai-suggestion-box" id="aiSuggestionBox" style="display:none">
+          AI Suggests: <span id="aiSuggestedAngle">—</span> — <span id="aiSuggestedReason" style="color:var(--text3)">based on current conditions</span>
+        </div>
+        <div class="manual-angle-ctrl" id="manualAngleCtrl">
+          <div class="slider-head" style="margin-top:8px">
+            <span class="slider-lbl">Manual Angle</span>
+            <span class="slider-val" id="motorManualDisplay">0°</span>
+          </div>
+          <input type="range" min="0" max="90" value="0" id="motorManualSlider"
+            oninput="onMotorManualSlider(this.value)" style="--rp:0%">
+          <div style="display:flex;justify-content:space-between;margin-top:5px">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">0° Closed</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">45°</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">90° Open</span>
+          </div>
+          <button class="set-angle-btn" onclick="commitMotorManualAngle()">🎯 Set Angle &amp; Send to ESP32</button>
+        </div>
+      </div>
+
+      <!-- Quick Angle Buttons + Slider + Window Viz -->
+      <div class="grid">
+        <div class="card s6">
+          <div class="card-accent" style="background:linear-gradient(90deg,#00d2ff,#a855f7)"></div>
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon pi-ctrl">🪟</div>
+              <div>
+                <div class="ph-title">Angle Quick Set</div>
+                <div class="ph-sub">Send command to servo motor</div>
+              </div>
+            </div>
+          </div>
+          <div class="ctrl-grid">
+            <button class="c-btn" onclick="setManualAngle(0)" id="btn0">
+              <span class="c-btn-ico">🔒</span><span class="c-btn-deg">0°</span><span class="c-btn-lbl">Closed</span>
+            </button>
+            <button class="c-btn" onclick="setManualAngle(30)" id="btn30">
+              <span class="c-btn-ico">↘️</span><span class="c-btn-deg">30°</span><span class="c-btn-lbl">Ajar</span>
+            </button>
+            <button class="c-btn active" onclick="setManualAngle(60)" id="btn60">
+              <span class="c-btn-ico">↗️</span><span class="c-btn-deg">60°</span><span class="c-btn-lbl">Optimal</span>
+            </button>
+            <button class="c-btn" onclick="setManualAngle(90)" id="btn90">
+              <span class="c-btn-ico">⬆️</span><span class="c-btn-deg">90°</span><span class="c-btn-lbl">Full</span>
+            </button>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-head">
+              <span class="slider-lbl">Custom Angle</span>
+              <span class="slider-val" id="sliderDisplay">60°</span>
+            </div>
+            <input type="range" min="0" max="90" value="60" id="angleSlider" oninput="onSliderChange(this.value)" style="--rp:66.7%">
+            <div style="display:flex;justify-content:space-between;margin-top:5px">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">0°</span>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">45°</span>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">90°</span>
+            </div>
+          </div>
+          <div class="status-notice sn-offline" id="ctrlNotice">🟡 ESP32 offline — Connect to enable live servo control</div>
+        </div>
+
+        <div class="card s6">
+          <div class="card-accent" style="background:linear-gradient(90deg,#39ff7e,#00ffcc)"></div>
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon pi-window">🪟</div>
+              <div>
+                <div class="ph-title">Window Aperture Visualization</div>
+                <div class="ph-sub">Live physical position preview</div>
+              </div>
+            </div>
+          </div>
+          <div class="window-viz">
+            <div class="window-viz-title">Current Window State</div>
+            <div class="window-frame">
+              <div class="window-pane" id="windowPane" style="height:66%"></div>
+            </div>
+            <div class="window-angle-label" id="windowVizLabel">60°</div>
+          </div>
+          <!-- AI gauge in manual section too -->
+          <div style="margin-top:14px">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">AI Recommended Angle</div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <div style="font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;color:var(--purple);text-shadow:0 0 16px rgba(168,85,247,0.4)" id="manAiAngle">—</div>
+              <div id="manAiReason" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">Waiting for data</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SECTION: RECORDS
+    ══════════════════════════════════════ -->
+    <div id="sec-records" class="section">
+      <div class="page-header">
+        <div>
+          <div class="page-title">
+            <div class="pt-dot" style="background:var(--pink);box-shadow:0 0 10px var(--pink)"></div> Record Log
+          </div>
+          <div class="page-sub">Complete sensor history — ESP32 live &amp; manual inputs only</div>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card s12">
+          <div class="card-accent" style="background:linear-gradient(90deg,#f472b6,#a855f7)"></div>
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon" style="background:rgba(244,114,182,0.12);border:1px solid rgba(244,114,182,0.3)">📁</div>
+              <div>
+                <div class="ph-title">Data Record Log</div>
+                <div class="ph-sub">Timestamped sensor readings</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)"><span id="recCount">0</span> records</span>
+              <button class="btn-sm btn-export" onclick="exportCSV()">Export CSV</button>
+              <button class="btn-sm btn-danger" onclick="clearRecords()">Clear</button>
+            </div>
+          </div>
+          <div class="data-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th><th>Time</th><th>Temp (°C)</th><th>Humidity (%)</th>
+                  <th>Light (lux)</th><th>Presence</th><th>Rain</th>
+                  <th>Angle (°)</th><th>AI Decision</th><th>Source</th>
+                </tr>
+              </thead>
+              <tbody id="recordsBody">
+                <tr><td colspan="10" style="text-align:center;color:var(--text3);padding:24px;font-family:'Share Tech Mono',monospace;font-size:11px">No records yet — connect ESP32 or apply manual values</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SECTION: TEAM
+    ══════════════════════════════════════ -->
+    <div id="sec-team" class="section">
+      <div class="page-header">
+        <div>
+          <div class="page-title">
+            <div class="pt-dot" style="background:var(--purple);box-shadow:0 0 10px var(--purple)"></div> Team Details
+          </div>
+          <div class="page-sub">Team InnovateX · MinorProject@2026 · CSE Data Science</div>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card s12">
+          <div class="card-accent" style="background:linear-gradient(90deg,#00d2ff,#a855f7,#f472b6)"></div>
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon pi-team">👥</div>
+              <div>
+                <div class="ph-title">Team InnovateX</div>
+                <div class="ph-sub">MinorProject@2026 — CSE Data Science</div>
+              </div>
+            </div>
+          </div>
+          <div class="team-grid">
+            <div class="member-card">
+              <div class="member-avatar">👨‍💻</div>
+              <div class="member-name">Sejal Shreya</div>
+              <div class="member-role">Project Lead & Hardware</div>
+              <div class="member-detail">ESP32 Integration<br>Circuit Design</div>
+            </div>
+            <div class="member-card">
+              <div class="member-avatar">👩‍💻</div>
+              <div class="member-name">Saadgi PUniwala</div>
+              <div class="member-role">Backend Developer</div>
+              <div class="member-detail">Flask Server<br>API Architecture</div>
+            </div>
+            <div class="member-card">
+              <div class="member-avatar">🧑‍🎨</div>
+              <div class="member-name">Sshyamolika Gungun</div>
+              <div class="member-role">Frontend & UI/UX</div>
+              <div class="member-detail">Dashboard Design<br>Data Visualization</div>
+            </div>
+            <div class="member-card">
+              <div class="member-avatar">🔬</div>
+              <div class="member-name">Syed Yonus</div>
+              <div class="member-role">AI/ML Engineer</div>
+              <div class="member-detail">Testing<br>Data Analysis & Documentation</div>
+            </div>
+            <div class="member-card">
+              <div class="member-avatar">📊</div>
+              <div class="member-name">-</div>
+              <div class="member-role">-</div>
+              <div class="member-detail">-</div>  
+            </div>
+            <div class="member-card">
+              <div class="member-avatar">🧑‍🔧</div>
+              <div class="member-name">-</div>
+              <div class="member-role">-</div>
+              <div class="member-detail">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card s12">
+          <div class="ph">
+            <div class="ph-left">
+              <div class="ph-icon pi-team">ℹ️</div>
+              <div><div class="ph-title">Project Overview</div><div class="ph-sub">Technical specifications</div></div>
+            </div>
+          </div>
+          <div class="project-info">
+            <div class="info-card">
+              <h4>🔧 Hardware Stack</h4>
+              <div class="info-item"><span class="info-key">Microcontroller</span><span class="info-val">ESP32 Dev Module</span></div>
+              <div class="info-item"><span class="info-key">Temp/Humidity</span><span class="info-val">AHT10 (I2C)</span></div>
+              <div class="info-item"><span class="info-key">Light Sensor</span><span class="info-val">LDR + LM393</span></div>
+              <div class="info-item"><span class="info-key">Motion Sensor</span><span class="info-val">HC-SR501 PIR</span></div>
+              <div class="info-item"><span class="info-key">Rain Sensor</span><span class="info-val">FC-37 Module</span></div>
+              <div class="info-item"><span class="info-key">Actuator</span><span class="info-val">MG996R Servo</span></div>
+            </div>
+            <div class="info-card">
+              <h4>💻 Software Stack</h4>
+              <div class="info-item"><span class="info-key">Firmware</span><span class="info-val">Arduino C++ (ESP32)</span></div>
+              <div class="info-item"><span class="info-key">Backend</span><span class="info-val">Python Flask</span></div>
+              <div class="info-item"><span class="info-key">Frontend</span><span class="info-val">HTML5 / CSS3 / JS</span></div>
+              <div class="info-item"><span class="info-key">Charts</span><span class="info-val">Chart.js 4.4</span></div>
+              <div class="info-item"><span class="info-key">Communication</span><span class="info-val">WiFi HTTP/REST</span></div>
+              <div class="info-item"><span class="info-key">AI Engine</span><span class="info-val">Rule-based Decision Tree</span></div>
+            </div>
+            <div class="info-card">
+              <h4>🎯 Features</h4>
+              <div class="info-item"><span class="info-key">Auto Ventilation</span><span class="info-val" style="color:var(--green)">✓ Active</span></div>
+              <div class="info-item"><span class="info-key">Rain Protection</span><span class="info-val" style="color:var(--green)">✓ Active</span></div>
+              <div class="info-item"><span class="info-key">Night Mode</span><span class="info-val" style="color:var(--green)">✓ Active</span></div>
+              <div class="info-item"><span class="info-key">Security Mode</span><span class="info-val" style="color:var(--green)">✓ 5min</span></div>
+              <div class="info-item"><span class="info-key">Manual Override</span><span class="info-val" style="color:var(--green)">✓ Active</span></div>
+              <div class="info-item"><span class="info-key">Live Dashboard</span><span class="info-val" style="color:var(--green)">✓ Active</span></div>
+            </div>
+            <div class="info-card">
+              <h4>📐 GPIO Mapping</h4>
+              <div class="info-item"><span class="info-key">AHT10 SDA/SCL</span><span class="info-val">GPIO 21 / 22</span></div>
+              <div class="info-item"><span class="info-key">Rain Sensor D0</span><span class="info-val">GPIO 34</span></div>
+              <div class="info-item"><span class="info-key">LDR Analog</span><span class="info-val">GPIO 35</span></div>
+              <div class="info-item"><span class="info-key">PIR Sensor</span><span class="info-val">GPIO 27</span></div>
+              <div class="info-item"><span class="info-key">Servo Signal</span><span class="info-val">GPIO 18</span></div>
+              <div class="info-item"><span class="info-key">Server Port</span><span class="info-val">Flask :5000</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-line"></div>
+      <div class="footer-box">
+        <div class="footer-team">⚡ TEAM INNOVATEX ⚡</div>
+        <div class="footer-detail">
+          <span class="hl">MinorProject@2026</span> &nbsp;·&nbsp;
+          Department of <span class="hl">Computer Science Engineering — Data Science</span><br>
+          © 2026 AI-Powered Smart Window Ventilation &amp; Environmental Control System
+        </div>
+      </div>
+    </footer>
+
+  </main>
+</div><!-- end app -->
+
+<script>
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+const S = {
+  mode: 'offline',        // 'offline' | 'live'
+  isOnline: false,
+  currentAngle: 60,
+  manualMode: false,
+  isManualOverride: false,
+  isManualEnvRain: false,
+  motorMode: 'ai',
+  pendingManualAngle: 60,
+  data: null,             // NO default data — must come from ESP32 or manual
+  prev: {},
+  hist: { labels:[], temp:[], hum:[], lux:[], angle:[] },
+  maxHist: 50,
+  logCount: 0,
+  records: [],
+  maxRecords: 200,
+  startTime: Date.now(),
+  totalReadings: 0,
+  liveReadings: 0,
+  uptimeSegs: [],
+  serverUrl: 'http://localhost:5000',
+  faultHistory: {}
+};
+
+// ════════════════════════════════════════════════════
+// LANDING
+// ════════════════════════════════════════════════════
+function enterApp() {
+  document.getElementById('landing').classList.add('hide');
+  setTimeout(()=> { document.getElementById('landing').style.display='none'; }, 900);
+  init();
+}
+
+// ════════════════════════════════════════════════════
+// SECTION NAV
+// ════════════════════════════════════════════════════
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+}
+
+// ════════════════════════════════════════════════════
+// AI ENGINE
+// ════════════════════════════════════════════════════
+function aiDecision(d) {
+  if (!d) return { angle: 0, conf: 0, factors: [], reason: 'No data' };
+  const { temperature: t, humidity: h, presence: p, rain: r, light: l } = d;
+  let angle = 45, conf = 70, factors = [], reason = '';
+
+  if (r) {
+    angle=0; conf=98; reason='Rain Protection';
+    factors=[
+      {c:'#00d2ff',txt:'Rain Detected — Closing Window'},
+      {c:'#ff4d6d',txt:'Protecting Interior from Moisture'}
+    ];
+  } else if (t > 32) {
+    angle=90; conf=92; reason='High Temp';
+    factors=[
+      {c:'#ff4d6d',txt:`High Temperature: ${t.toFixed(1)}°C`},
+      {c:'#ffb020',txt:'Maximum Ventilation Required'},
+      {c:'#a855f7',txt:'No Rain — Safe to Open'}
+    ];
+    if (!p) { angle=80; conf=85; factors.push({c:'#6a8aaa',txt:'No Presence — Conservative Mode'}); }
+  } else if (t >= 26 && t <= 32 && p) {
+    angle=60; conf=88; reason='Optimal';
+    factors=[
+      {c:'#00d2ff',txt:`Moderate Temp: ${t.toFixed(1)}°C`},
+      {c:'#39ff7e',txt:'Human Presence Detected'},
+      {c:'#a855f7',txt:'No Rain Detected'}
+    ];
+    if (h > 70) { angle=50; conf=82; factors.push({c:'#0af',txt:`High Humidity: ${h}%`}); }
+    if (l < 200) { angle=55; factors.push({c:'#ffb020',txt:'Low Light — Evening Mode'}); }
+  } else if (t >= 26 && t <= 32 && !p) {
+    angle=45; conf=78; reason='Energy Save';
+    factors=[
+      {c:'#00d2ff',txt:`Moderate Temp: ${t.toFixed(1)}°C`},
+      {c:'#6a8aaa',txt:'No Human — Energy Saving Mode'},
+      {c:'#a855f7',txt:'No Rain Detected'}
+    ];
+  } else {
+    angle=t<20?15:30; conf=t<20?90:85; reason='Cool/Cold';
+    factors=[
+      {c:'#0af',txt:`${t<20?'Cold':'Cool'} Temp: ${t.toFixed(1)}°C`},
+      {c:'#00d2ff',txt:'Minimal Ventilation Needed'}
+    ];
+  }
+
+  angle = Math.min(90, Math.max(0, angle));
+  conf  = Math.min(99, Math.max(60, conf + Math.floor(Math.random()*4-2)));
+  return { angle, conf, factors, reason };
+}
+
+// ════════════════════════════════════════════════════
+// UI UPDATES
+// ════════════════════════════════════════════════════
+function updateCards(d) {
+  if (!d) return;
+  const tn = document.getElementById('tempNum');
+  tn.textContent = d.temperature.toFixed(1);
+  const tc = d.temperature<25?'temp-c':d.temperature<28?'temp-m':d.temperature<32?'temp-w':'temp-h';
+  document.getElementById('tempVal').className = 's-value '+tc;
+  const td = d.temperature - (S.prev.temperature || d.temperature);
+  setTrend('tempTrend', td, 0.1);
+
+  document.getElementById('humNum').textContent = d.humidity;
+  setTrend('humTrend', d.humidity - (S.prev.humidity || d.humidity), 1);
+
+  document.getElementById('luxNum').textContent = d.light;
+  const ld = d.light - (S.prev.light || d.light);
+  const le = document.getElementById('luxTrend');
+  le.textContent = ld>20?'↑ Brighter':ld<-20?'↓ Dimmer':'→ Stable';
+  le.className = 's-trend '+(ld>20?'trend-up':ld<-20?'trend-down':'trend-stable');
+
+  document.getElementById('presVal').textContent = d.presence ? 'Detected' : 'Not Detected';
+  const pb = document.getElementById('presBadge');
+  pb.className = 's-chip '+(d.presence ? 'chip-on' : 'chip-off');
+  pb.textContent = d.presence ? '● Active' : '● Inactive';
+
+  document.getElementById('rainVal').textContent = d.rain ? 'Rain Detected' : 'Clear';
+  const rb = document.getElementById('rainBadge');
+  rb.className = 's-chip '+(d.rain ? 'chip-rain' : 'chip-dry');
+  rb.textContent = d.rain ? '● Raining' : '● Clear';
+
+  // Heat bars in analytics
+  const hbT = Math.round((d.temperature / 60) * 100);
+  const hbH = d.humidity;
+  const hbL = Math.round((d.light / 1000) * 100);
+  const hbA = Math.round((S.currentAngle / 90) * 100);
+  document.getElementById('hbTemp').style.width = hbT+'%';
+  document.getElementById('hbTempV').textContent = d.temperature.toFixed(1)+'°C';
+  document.getElementById('hbHum').style.width = hbH+'%';
+  document.getElementById('hbHumV').textContent = d.humidity+'%';
+  document.getElementById('hbLux').style.width = hbL+'%';
+  document.getElementById('hbLuxV').textContent = d.light+' lx';
+  document.getElementById('hbAngle').style.width = hbA+'%';
+  document.getElementById('hbAngleV').textContent = S.currentAngle+'°';
+
+  // Mini-gauges in analytics
+  drawMiniGauge('sgcTemp', d.temperature, 0, 60, '#ff4d6d');
+  drawMiniGauge('sgcHum', d.humidity, 0, 100, '#00d2ff');
+  drawMiniGauge('sgcLux', d.light, 0, 1000, '#ffb020');
+  drawMiniGauge('sgcAngle', S.currentAngle, 0, 90, '#a855f7');
+  document.getElementById('sgcTempVal').innerHTML = d.temperature.toFixed(1)+'<span class="sgc-unit">°C</span>';
+  document.getElementById('sgcHumVal').innerHTML = d.humidity+'<span class="sgc-unit">%</span>';
+  document.getElementById('sgcLuxVal').innerHTML = d.light+'<span class="sgc-unit">lux</span>';
+  document.getElementById('sgcAngleVal').innerHTML = S.currentAngle+'<span class="sgc-unit">°</span>';
+
+  S.prev = { temperature: d.temperature, humidity: d.humidity, light: d.light };
+}
+
+function setTrend(id, diff, thresh) {
+  const el = document.getElementById(id);
+  el.textContent = diff>thresh?'↑ Rising':diff<-thresh?'↓ Falling':'→ Stable';
+  el.className = 's-trend '+(diff>thresh?'trend-up':diff<-thresh?'trend-down':'trend-stable');
+}
+
+function updateAI(dec) {
+  const ang = dec.angle !== undefined ? dec.angle : 0;
+  document.getElementById('aiAngle').textContent = ang+'°';
+  document.getElementById('confPct').textContent = dec.conf+'%';
+  document.getElementById('confPct2').textContent = dec.conf+'%';
+  document.getElementById('confBar').style.width = dec.conf+'%';
+  document.getElementById('factorsList').innerHTML = dec.factors.map(f =>
+    `<div class="factor"><span class="factor-dot" style="background:${f.c}"></span>${f.txt}</div>`
+  ).join('');
+  // Manual section AI display
+  const manAiAngle = document.getElementById('manAiAngle');
+  const manAiReason = document.getElementById('manAiReason');
+  if (manAiAngle) manAiAngle.textContent = ang+'°';
+  if (manAiReason) manAiReason.textContent = dec.reason || '—';
+}
+
+function updateGauge(angle) {
+  const cv = document.getElementById('gaugeCanvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2, cy=H-8, r=Math.min(W,H*2)*0.42;
+
+  [[0,45,'#0a1f3c'],[45,75,'#0d2d1a'],[75,90,'#2a0d0d']].forEach(([from,to,col])=>{
+    const a1=Math.PI-(from/90)*Math.PI, a2=Math.PI-(to/90)*Math.PI;
+    ctx.beginPath(); ctx.arc(cx,cy,r,a1,a2,true); ctx.arc(cx,cy,r*.65,a2,a1,false);
+    ctx.fillStyle=col; ctx.fill();
+  });
+
+  const fc = angle<=45?'#00d2ff':angle<=75?'#39ff7e':'#ff4d6d';
+  const fe = Math.PI-(angle/90)*Math.PI;
+  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,fe,true); ctx.arc(cx,cy,r*.65,fe,Math.PI,false);
+  ctx.fillStyle=fc+'bb'; ctx.fill();
+
+  ctx.beginPath(); ctx.arc(cx,cy,r*.825,Math.PI,fe,true);
+  ctx.strokeStyle=fc; ctx.lineWidth=2.5; ctx.shadowBlur=16; ctx.shadowColor=fc; ctx.stroke(); ctx.shadowBlur=0;
+
+  const na=Math.PI-(angle/90)*Math.PI;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(na)*r*.8, cy+Math.sin(na)*r*.8);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.shadowBlur=8; ctx.shadowColor='#fff'; ctx.stroke(); ctx.shadowBlur=0;
+
+  ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2);
+  ctx.fillStyle='#fff'; ctx.shadowBlur=10; ctx.shadowColor=fc; ctx.fill(); ctx.shadowBlur=0;
+
+  [0,30,60,90].forEach(tick=>{
+    const ta=Math.PI-(tick/90)*Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(ta)*r*.58, cy+Math.sin(ta)*r*.58);
+    ctx.lineTo(cx+Math.cos(ta)*r*.63, cy+Math.sin(ta)*r*.63);
+    ctx.strokeStyle='#1a2f4a'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle='#2a4060'; ctx.font=`bold 10px 'Share Tech Mono'`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(tick+'°', cx+Math.cos(ta)*r*.5, cy+Math.sin(ta)*r*.5);
+  });
+
+  document.getElementById('gaugeAngle').textContent = angle+'°';
+}
+
+// Mini gauge arcs for analytics
+function drawMiniGauge(canvasId, value, min, max, color) {
+  const cv = document.getElementById(canvasId);
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2, cy=H-2, r=Math.min(W,H*1.8)*0.4;
+  const pct = Math.min(1, Math.max(0, (value - min) / (max - min)));
+
+  // bg arc
+  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,0,false);
+  ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=8; ctx.stroke();
+
+  // fill arc
+  const endAngle = Math.PI + pct * Math.PI;
+  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,endAngle,false);
+  ctx.strokeStyle=color; ctx.lineWidth=8;
+  ctx.shadowBlur=12; ctx.shadowColor=color; ctx.stroke(); ctx.shadowBlur=0;
+}
+
+// ════════════════════════════════════════════════════
+// CHARTS
+// ════════════════════════════════════════════════════
+const cOpts = (ymin, ymax) => ({
+  responsive:true, maintainAspectRatio:true, animation:{duration:400},
+  plugins:{legend:{display:false}, tooltip:{
+    backgroundColor:'rgba(4,9,20,0.97)', titleColor:'#00d2ff',
+    bodyColor:'#6a8aaa', borderColor:'rgba(0,210,255,0.2)', borderWidth:1,
+    titleFont:{family:'Share Tech Mono',size:10}, bodyFont:{family:'Share Tech Mono',size:10}
+  }},
+  scales:{
+    x:{grid:{color:'rgba(0,210,255,0.04)'}, ticks:{color:'#1a3050',font:{family:'Share Tech Mono',size:8},maxTicksLimit:6}},
+    y:{grid:{color:'rgba(0,210,255,0.04)'}, ticks:{color:'#1a3050',font:{family:'Share Tech Mono',size:8}},
+       ...(ymin!==null?{min:ymin}:{}), ...(ymax!==null?{max:ymax}:{}) }
+  }
+});
+
+const mkDS = (color, data) => ({
+  data, borderColor:color, backgroundColor:color+'18',
+  borderWidth:2, pointRadius:2, pointBackgroundColor:color,
+  tension:0.4, fill:true
+});
+
+const chartTH = new Chart(document.getElementById('chartTH'), {
+  type:'line',
+  data:{labels:[], datasets:[mkDS('#ff4d6d',[]), mkDS('#39ff7e',[])]},
+  options:{...cOpts(null,null), plugins:{...cOpts().plugins, legend:{display:true, labels:{
+    color:'#2a4060', font:{family:'Share Tech Mono',size:9},
+    generateLabels:()=>[
+      {text:'Temp °C', fillStyle:'#ff4d6d', strokeStyle:'#ff4d6d', lineWidth:2},
+      {text:'Humidity %', fillStyle:'#39ff7e', strokeStyle:'#39ff7e', lineWidth:2}
+    ]
+  }}}}
+});
+
+const chartAngle = new Chart(document.getElementById('chartAngle'), {
+  type:'line', data:{labels:[], datasets:[mkDS('#a855f7',[])]}, options:cOpts(0,90)
+});
+
+const chartTempLong  = new Chart(document.getElementById('chartTempLong'),  {type:'line',data:{labels:[],datasets:[mkDS('#ff4d6d',[])]},options:cOpts(null,null)});
+const chartHumLong   = new Chart(document.getElementById('chartHumLong'),   {type:'line',data:{labels:[],datasets:[mkDS('#00d2ff',[])]},options:cOpts(null,null)});
+const chartLuxLong   = new Chart(document.getElementById('chartLuxLong'),   {type:'line',data:{labels:[],datasets:[mkDS('#ffb020',[])]},options:cOpts(null,null)});
+const chartAngleLong = new Chart(document.getElementById('chartAngleLong'), {type:'line',data:{labels:[],datasets:[mkDS('#a855f7',[])]},options:cOpts(0,90)});
+
+function updateCharts(d) {
+  const now = new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const h = S.hist;
+
+  h.labels.push(now); h.temp.push(d.temperature);
+  h.hum.push(d.humidity); h.lux.push(d.light); h.angle.push(S.currentAngle);
+
+  if(h.labels.length > S.maxHist) {
+    h.labels.shift(); h.temp.shift(); h.hum.shift(); h.lux.shift(); h.angle.shift();
+  }
+
+  chartTH.data.labels = [...h.labels];
+  chartTH.data.datasets[0].data = [...h.temp];
+  chartTH.data.datasets[1].data = [...h.hum];
+  chartTH.update('none');
+
+  chartAngle.data.labels = [...h.labels];
+  chartAngle.data.datasets[0].data = [...h.angle];
+  chartAngle.update('none');
+
+  [chartTempLong, chartHumLong, chartLuxLong, chartAngleLong].forEach((c,i) => {
+    const arr = [h.temp, h.hum, h.lux, h.angle][i];
+    c.data.labels = [...h.labels];
+    c.data.datasets[0].data = [...arr];
+    c.update('none');
+  });
+
+  if(h.temp.length > 0) {
+    document.getElementById('statTmin').textContent = Math.min(...h.temp).toFixed(1)+'°C';
+    document.getElementById('statTmax').textContent = Math.max(...h.temp).toFixed(1)+'°C';
+    document.getElementById('statTavg').textContent = (h.temp.reduce((a,b)=>a+b,0)/h.temp.length).toFixed(1)+'°C';
+    document.getElementById('statHmin').textContent = Math.min(...h.hum)+'%';
+    document.getElementById('statHmax').textContent = Math.max(...h.hum)+'%';
+    document.getElementById('statHavg').textContent = Math.round(h.hum.reduce((a,b)=>a+b,0)/h.hum.length)+'%';
+  }
+}
+
+// ════════════════════════════════════════════════════
+// RECORDS
+// ════════════════════════════════════════════════════
+function addRecord(d, dec, source) {
+  if(S.records.length >= S.maxRecords) S.records.shift();
+  const now = new Date();
+  S.records.push({
+    n: S.totalReadings,
+    time: now.toLocaleTimeString('en-US',{hour12:false}),
+    temp: d.temperature.toFixed(1),
+    hum: d.humidity,
+    lux: d.light,
+    presence: d.presence ? 'Yes' : 'No',
+    rain: d.rain ? 'Yes' : 'No',
+    angle: S.currentAngle,
+    reason: dec.reason,
+    source
+  });
+
+  document.getElementById('recCount').textContent = S.records.length;
+  document.getElementById('sb-rec-badge').textContent = S.records.length;
+
+  const tbody = document.getElementById('recordsBody');
+  if(tbody.children[0] && tbody.children[0].children.length === 1 && tbody.children[0].children[0].colSpan) tbody.innerHTML = '';
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="td-time">${S.records.length}</td>
+    <td class="td-time">${S.records[S.records.length-1].time}</td>
+    <td style="color:var(--red)">${d.temperature.toFixed(1)}</td>
+    <td style="color:var(--cyan)">${d.humidity}%</td>
+    <td style="color:var(--amber)">${d.light}</td>
+    <td style="color:${d.presence?'var(--green)':'var(--text3)'}">${d.presence?'Yes':'No'}</td>
+    <td style="color:${d.rain?'var(--purple)':'var(--teal)'}">${d.rain?'🌧 Yes':'☀ No'}</td>
+    <td class="td-angle">${S.currentAngle}°</td>
+    <td style="color:var(--text2);font-size:10px">${dec.reason}</td>
+    <td class="td-source ${source==='esp32'?'badge-live':'badge-manual'}">${source==='esp32'?'🟢 Live':'🟡 Manual'}</td>
+  `;
+  tbody.insertBefore(tr, tbody.firstChild);
+  while(tbody.children.length > S.maxRecords) tbody.removeChild(tbody.lastChild);
+}
+
+function clearRecords() {
+  S.records = [];
+  document.getElementById('recordsBody').innerHTML =
+    '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:24px;font-family:\'Share Tech Mono\',monospace;font-size:11px">Records cleared</td></tr>';
+  document.getElementById('recCount').textContent = '0';
+  document.getElementById('sb-rec-badge').textContent = '0';
+}
+
+function exportCSV() {
+  if(!S.records.length) return;
+  const hdr = '#,Time,Temp,Humidity,Light,Presence,Rain,Angle,Decision,Source\n';
+  const rows = S.records.map(r => `${r.n},${r.time},${r.temp},${r.hum},${r.lux},${r.presence},${r.rain},${r.angle},${r.reason},${r.source}`).join('\n');
+  const blob = new Blob([hdr+rows], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `smartvent_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  addLog('Data exported as CSV', 'success');
+}
+
+// ════════════════════════════════════════════════════
+// EVENT LOG
+// ════════════════════════════════════════════════════
+function addLog(msg, type='info') {
+  const now = new Date().toLocaleTimeString('en-US',{hour12:false});
+  const icons = {success:'✅',info:'ℹ️',warning:'⚠️',ai:'🧠',error:'❌'};
+  const wc = {success:'li-success',info:'li-info',warning:'li-warning',ai:'li-ai',error:'li-error'};
+  const el = document.createElement('div');
+  el.className = `log-item ${type}`;
+  el.innerHTML = `
+    <div class="log-ico ${wc[type]}">${icons[type]}</div>
+    <div class="log-body">
+      <div class="log-ts">🕐 ${now}</div>
+      <div class="log-msg">${msg}</div>
+    </div>`;
+  const log = document.getElementById('eventLog');
+  log.insertBefore(el, log.firstChild);
+  while(log.children.length > 120) log.removeChild(log.lastChild);
+  S.logCount++;
+  document.getElementById('logCount').textContent = S.logCount;
+  document.getElementById('lastUpdate').textContent = 'Last: '+now;
+}
+
+function clearLog() {
+  document.getElementById('eventLog').innerHTML = '';
+  S.logCount = 0;
+  document.getElementById('logCount').textContent = '0';
+  addLog('Event log cleared','info');
+}
+
+function exportLog() {
+  const items = document.querySelectorAll('.log-msg');
+  const text = Array.from(items).map(i => i.textContent).join('\n');
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `smartvent_log_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+}
+
+// ════════════════════════════════════════════════════
+// MANUAL CONTROLS
+// ════════════════════════════════════════════════════
+function setManualAngle(angle) {
+  S.currentAngle = angle; S.manualMode = true;
+  updateGauge(angle);
+  document.getElementById('angleSlider').value = angle;
+  document.getElementById('sliderDisplay').textContent = angle+'°';
+  updateSliderBg(angle);
+  ['btn0','btn30','btn60','btn90'].forEach(id => document.getElementById(id).classList.remove('active'));
+  const map = {0:'btn0',30:'btn30',60:'btn60',90:'btn90'};
+  if(map[angle]) document.getElementById(map[angle]).classList.add('active');
+  updateWindowViz(angle);
+  if(S.isOnline) sendManual(angle);
+  else addLog(`Manual Angle: ${angle}° (ESP32 offline — not sent)`, 'warning');
+}
+
+function onSliderChange(val) {
+  val = parseInt(val); S.currentAngle = val; S.manualMode = true;
+  document.getElementById('sliderDisplay').textContent = val+'°';
+  updateSliderBg(val); updateGauge(val);
+  ['btn0','btn30','btn60','btn90'].forEach(id => document.getElementById(id).classList.remove('active'));
+  const m = {0:'btn0',30:'btn30',60:'btn60',90:'btn90'};
+  if(m[val]) document.getElementById(m[val]).classList.add('active');
+  updateWindowViz(val);
+}
+
+function updateSliderBg(val) {
+  document.getElementById('angleSlider').style.setProperty('--rp', (val/90*100)+'%');
+}
+
+async function sendManual(angle) {
+  try {
+    const r = await fetch(`${S.serverUrl}/api/servo`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({angle})
+    });
+    if(r.ok) addLog(`Manual command sent to ESP32: ${angle}°`, 'success');
+    else addLog(`Command failed (HTTP ${r.status})`, 'warning');
+  } catch {
+    addLog(`ESP32 unreachable — angle ${angle}° not sent`, 'warning');
+  }
+}
+
+// ════════════════════════════════════════════════════
+// WINDOW VISUALIZATION
+// ════════════════════════════════════════════════════
+function updateWindowViz(angle) {
+  const pane  = document.getElementById('windowPane');
+  const label = document.getElementById('windowVizLabel');
+  if(!pane || !label) return;
+  const pct = (angle / 90) * 100;
+  pane.style.height = pct + '%';
+  label.textContent = angle + '°';
+  label.classList.add('val-pulse');
+  setTimeout(() => label.classList.remove('val-pulse'), 450);
+}
+
+// ════════════════════════════════════════════════════
+// MOTOR CONTROL MODE
+// ════════════════════════════════════════════════════
+function setMotorMode(mode) {
+  S.motorMode = mode;
+  const optAI     = document.getElementById('motorOptAI');
+  const optManual = document.getElementById('motorOptManual');
+  const aiBox     = document.getElementById('aiDecisionBox');
+  const sugBox    = document.getElementById('aiSuggestionBox');
+  const manCtrl   = document.getElementById('manualAngleCtrl');
+
+  if(mode === 'ai') {
+    optAI.className     = 'motor-mode-opt selected-ai';
+    optManual.className = 'motor-mode-opt';
+    aiBox.style.display = 'block';
+    sugBox.style.display= 'none';
+    manCtrl.className   = 'manual-angle-ctrl';
+    S.manualMode = false;
+    addLog('Motor Mode → AI Control (automatic angle decisions)', 'ai');
+  } else {
+    optAI.className     = 'motor-mode-opt';
+    optManual.className = 'motor-mode-opt selected-manual';
+    aiBox.style.display = 'none';
+    sugBox.style.display= 'block';
+    manCtrl.className   = 'manual-angle-ctrl visible';
+    S.manualMode = true;
+    if(S.data) {
+      const dec = aiDecision(S.data);
+      document.getElementById('aiSuggestedAngle').textContent = dec.angle+'°';
+      document.getElementById('aiSuggestedReason').textContent = dec.reason;
+    }
+    document.getElementById('motorManualSlider').value = S.currentAngle;
+    document.getElementById('motorManualDisplay').textContent = S.currentAngle+'°';
+    document.getElementById('motorManualSlider').style.setProperty('--rp', (S.currentAngle/90*100)+'%');
+    addLog('Motor Mode → Manual Control (user authority)', 'info');
+  }
+}
+
+function onMotorManualSlider(val) {
+  val = parseInt(val);
+  S.pendingManualAngle = val;
+  document.getElementById('motorManualDisplay').textContent = val+'°';
+  document.getElementById('motorManualSlider').style.setProperty('--rp', (val/90*100)+'%');
+  updateWindowViz(val);
+}
+
+function commitMotorManualAngle() {
+  const angle = S.pendingManualAngle;
+  S.currentAngle = angle; S.manualMode = true;
+  updateGauge(angle);
+  updateSliderBg(angle);
+  document.getElementById('angleSlider').value = angle;
+  document.getElementById('sliderDisplay').textContent = angle+'°';
+  ['btn0','btn30','btn60','btn90'].forEach(id => document.getElementById(id).classList.remove('active'));
+  const map = {0:'btn0',30:'btn30',60:'btn60',90:'btn90'};
+  if(map[angle]) document.getElementById(map[angle]).classList.add('active');
+  updateWindowViz(angle);
+  if(S.isOnline) sendManual(angle);
+  addLog(`Motor Manual: Angle set to ${angle}° by user`, 'warning');
+}
+
+function updateAIDecisionDisplay(dec) {
+  const text = document.getElementById('aiDecisionText');
+  if(!text) return;
+  const msg = dec.angle===0   ? `AI Decision: Closing window — Rain protection active (0°)` :
+              dec.angle>=80   ? `AI Decision: Opening to maximum — High temperature (${dec.angle}°)` :
+              dec.angle>=60   ? `AI Decision: Opening for optimal ventilation (${dec.angle}°)` :
+              dec.angle>=30   ? `AI Decision: Partial opening — Moderate conditions (${dec.angle}°)` :
+              `AI Decision: Minimal opening — Cool/energy-saving mode (${dec.angle}°)`;
+  text.textContent = msg;
+  document.getElementById('aiSuggestedAngle').textContent = dec.angle+'°';
+  document.getElementById('aiSuggestedReason').textContent = dec.reason || 'current conditions';
+}
+
+// ════════════════════════════════════════════════════
+// MANUAL ENV OVERRIDE (no fake data — user inputs only)
+// ════════════════════════════════════════════════════
+function toggleRainOverride() {
+  S.isManualEnvRain = !S.isManualEnvRain;
+  const btn = document.getElementById('rainToggleBtn');
+  const ico = document.getElementById('rainToggleIcon');
+  const txt = document.getElementById('rainToggleTxt');
+  if(S.isManualEnvRain) {
+    btn.className = 'rain-toggle-btn rain-yes';
+    ico.textContent = '🌧️'; txt.textContent = 'RAIN DETECTED';
+  } else {
+    btn.className = 'rain-toggle-btn rain-no';
+    ico.textContent = '☀️'; txt.textContent = 'DRY / NO RAIN';
+  }
+}
+
+function applyManualEnv() {
+  const temp = parseFloat(document.getElementById('envTemp').value);
+  const hum  = parseInt(document.getElementById('envHum').value);
+  const ldr  = parseInt(document.getElementById('envLdr').value);
+  const rain = S.isManualEnvRain;
+
+  if(isNaN(temp)||isNaN(hum)||isNaN(ldr)) { addLog('⚠️ Invalid input — fill all fields', 'warning'); return; }
+  if(temp<0||temp>60)   { addLog('⚠️ Temperature out of range (0–60°C)', 'warning'); return; }
+  if(hum<0||hum>100)    { addLog('⚠️ Humidity out of range (0–100%)', 'warning'); return; }
+  if(ldr<0||ldr>1000)   { addLog('⚠️ LDR out of range (0–1000 lux)', 'warning'); return; }
+
+  S.isManualOverride = true;
+  S.data = { temperature:temp, humidity:hum, light:ldr, rain, presence:false, current_angle:S.currentAngle };
+  document.getElementById('overrideActiveBadge').style.display = 'block';
+
+  S.totalReadings++;
+  updateCards(S.data);
+  const dec = aiDecision(S.data);
+  updateAI(dec);
+  updateAIDecisionDisplay(dec);
+
+  if(S.motorMode === 'ai' && !S.manualMode) {
+    S.currentAngle = dec.angle;
+    updateGauge(dec.angle);
+    updateSliderBg(dec.angle);
+    document.getElementById('angleSlider').value = dec.angle;
+    document.getElementById('sliderDisplay').textContent = dec.angle+'°';
+    updateWindowViz(dec.angle);
+  }
+
+  runFaultDetection(S.data);
+  updateCharts(S.data);
+  addRecord(S.data, dec, 'manual');
+  updateUptimeBar('manual');
+  updateMetaStats();
+  addLog(`Manual Input Applied — Temp:${temp}°C Hum:${hum}% LDR:${ldr} Rain:${rain?'YES':'NO'}`, 'warning');
+}
+
+// ════════════════════════════════════════════════════
+// FAULT DETECTION
+// ════════════════════════════════════════════════════
+function runFaultDetection(d) {
+  const faults = [];
+
+  if(d.light===0||d.light===null||d.light===undefined) {
+    faults.push({msg:'LDR not responding — Value is 0 or null',tag:'LDR_DEAD',icon:'💡'});
+  }
+
+  if(!S.faultHistory.ldrLast) S.faultHistory.ldrLast = [];
+  S.faultHistory.ldrLast.push(d.light);
+  if(S.faultHistory.ldrLast.length > 8) S.faultHistory.ldrLast.shift();
+  if(S.faultHistory.ldrLast.length >= 8) {
+    if(new Set(S.faultHistory.ldrLast).size <= 1 && d.light !== 0) {
+      faults.push({msg:`LDR stuck at ${d.light} lux for 8+ readings`,tag:'LDR_STUCK',icon:'📡'});
+    }
+  }
+
+  if(!S.faultHistory.rainLast) S.faultHistory.rainLast = [];
+  S.faultHistory.rainLast.push(d.rain ? 1 : 0);
+  if(S.faultHistory.rainLast.length > 10) S.faultHistory.rainLast.shift();
+  if(S.faultHistory.rainLast.length >= 10 && new Set(S.faultHistory.rainLast).size <= 1) {
+    faults.push({msg:`Rain sensor stuck — constant ${d.rain?'RAIN':'DRY'} for 10+ cycles`,tag:'RAIN_STUCK',icon:'🌧️'});
+  }
+
+  if(d.rain && d.light > 700) {
+    faults.push({msg:`Conflict: Rain + high LDR (${d.light} lux) — sensor anomaly`,tag:'RAIN_LDR_CONFLICT',icon:'⚡'});
+  }
+
+  if(d.temperature < -10 || d.temperature > 80) {
+    faults.push({msg:`Temperature out of valid range: ${d.temperature}°C`,tag:'TEMP_RANGE',icon:'🌡️'});
+  }
+
+  if(d.humidity < 0 || d.humidity > 100) {
+    faults.push({msg:`Humidity invalid: ${d.humidity}%`,tag:'HUM_RANGE',icon:'💧'});
+  }
+
+  const nomEl  = document.getElementById('faultNominal');
+  const listEl = document.getElementById('faultList');
+  const badge  = document.getElementById('faultBadge');
+  const badgeTxt = document.getElementById('faultBadgeTxt');
+  const panel  = document.getElementById('faultPanel');
+
+  if(faults.length === 0) {
+    nomEl.style.display  = 'flex';
+    listEl.style.display = 'none';
+    listEl.innerHTML = '';
+    badge.className  = 'fault-badge nominal';
+    badgeTxt.textContent = 'ALL SYSTEMS NOMINAL';
+    panel.style.borderColor = 'var(--border)';
+  } else {
+    nomEl.style.display  = 'none';
+    listEl.style.display = 'flex';
+    listEl.innerHTML = faults.map(f => `
+      <div class="fault-item">
+        <span class="fault-item-icon">${f.icon}</span>
+        <div>
+          <div class="fault-item-msg">⚠️ ${f.msg}</div>
+          <div class="fault-item-tag">Fault Code: ${f.tag}</div>
+        </div>
+      </div>`).join('');
+    badge.className = 'fault-badge alert';
+    badgeTxt.textContent = faults.length === 1 ? '1 FAULT DETECTED' : `${faults.length} FAULTS`;
+    panel.style.borderColor = 'rgba(255,77,109,0.3)';
+    const key = faults.map(f=>f.tag).join(',');
+    if(key !== S.faultHistory.lastFaultKey) {
+      S.faultHistory.lastFaultKey = key;
+      faults.forEach(f => addLog(`FAULT: ${f.msg}`, 'error'));
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════
+// RSSI SIGNAL BARS
+// ════════════════════════════════════════════════════
+function updateRssiBars(rssi) {
+  const bars = ['rb1','rb2','rb3','rb4'];
+  bars.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.className = el.className.replace(/\s*(lit|lit-mid|lit-weak)/g,'').trim();
+  });
+  if(rssi === null || rssi === undefined) return;
+  const abs = Math.abs(rssi);
+  let lit = abs<50?4:abs<65?3:abs<75?2:1;
+  const cls = abs<65?'lit':abs<75?'lit-mid':'lit-weak';
+  for(let i=0; i<lit; i++) {
+    const el = document.getElementById(bars[i]);
+    if(el) el.classList.add(cls);
+  }
+}
+
+// ════════════════════════════════════════════════════
+// CONNECTIVITY STATS
+// ════════════════════════════════════════════════════
+function updateConnStats(d, pingMs) {
+  const ssid = d.wifi_ssid || d.ssid || '—';
+  const ip   = d.wifi_ip   || d.ip   || '—';
+  const rssi = d.wifi_rssi !== undefined ? d.wifi_rssi : (d.rssi !== undefined ? d.rssi : null);
+
+  document.getElementById('cs-ssid').textContent = ssid;
+  document.getElementById('cs-ip').textContent   = ip;
+
+  if(rssi !== null) {
+    const el = document.getElementById('cs-rssi');
+    el.textContent = rssi+' dBm';
+    const abs = Math.abs(rssi);
+    el.className = 'cs-val '+(abs<65?'v-green':abs<75?'v-amber':'v-red');
+    updateRssiBars(rssi);
+  }
+
+  const pingEl = document.getElementById('cs-ping');
+  if(pingMs !== undefined) {
+    pingEl.textContent = pingMs+' ms';
+    pingEl.className = 'cs-val '+(pingMs<50?'v-green':pingMs<120?'v-amber':'v-red');
+  }
+
+  // Sidebar update
+  if(ip !== '—') {
+    document.getElementById('sbIP').textContent = ip;
+    document.getElementById('sbPort').textContent = 'Port: '+S.serverUrl.split(':')[2];
+  }
+}
+
+// ════════════════════════════════════════════════════
+// SET ONLINE STATUS
+// ════════════════════════════════════════════════════
+function setStatus(online) {
+  S.isOnline = online;
+
+  const connBlock  = document.getElementById('connBlock');
+  const connBadge  = document.getElementById('connBadge');
+  const connBadgeTxt = document.getElementById('connBadgeTxt');
+  const ctrlNotice = document.getElementById('ctrlNotice');
+  const sbConn     = document.getElementById('sbConn');
+  const sbStatus   = document.getElementById('sbStatus');
+
+  if(online) {
+    connBlock.className = 'conn-block is-online';
+    connBadge.className = 'conn-badge online';
+    connBadgeTxt.textContent = 'ONLINE';
+    ctrlNotice.className = 'status-notice sn-live';
+    ctrlNotice.innerHTML = '🟢 ESP32 Connected — Live servo control active';
+    sbConn.classList.add('online');
+    sbStatus.textContent = 'ONLINE';
+    document.getElementById('cs-device').textContent = 'ESP32';
+    document.getElementById('cs-device').className = 'cs-val v-green';
+    document.getElementById('cs-status').classList.add('active-stat');
+    document.getElementById('offlineUrlLabel').textContent = S.serverUrl.replace('http://','');
+  } else {
+    connBlock.className = 'conn-block is-offline';
+    connBadge.className = 'conn-badge offline';
+    connBadgeTxt.textContent = 'OFFLINE';
+    ctrlNotice.className = 'status-notice sn-offline';
+    ctrlNotice.innerHTML = '🟡 ESP32 offline — Enter IP and connect above';
+    sbConn.classList.remove('online');
+    sbStatus.textContent = 'OFFLINE';
+    document.getElementById('cs-device').textContent = '—';
+    document.getElementById('cs-device').className = 'cs-val v-dim';
+    document.getElementById('cs-status').classList.remove('active-stat');
+    ['cs-ssid','cs-ip','cs-rssi','cs-ping'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = '—';
+    });
+    document.getElementById('sbIP').textContent = '—';
+    updateRssiBars(null);
+  }
+}
+
+// ════════════════════════════════════════════════════
+// LIVE ESP32 FETCH
+// ════════════════════════════════════════════════════
+async function fetchLive() {
+  const t0 = Date.now();
+  try {
+    const r = await fetch(`${S.serverUrl}/api/data`, {signal:AbortSignal.timeout(2500)});
+    if(r.ok) {
+      const d = await r.json();
+      const pingMs = Date.now() - t0;
+      if(!S.isOnline) { setStatus(true); addLog('ESP32 Connected — Live data active','success'); }
+      updateConnStats(d, pingMs);
+      return d;
+    }
+  } catch {}
+  if(S.isOnline) { setStatus(false); addLog('ESP32 lost connection','warning'); }
+  return null;
+}
+
+// ════════════════════════════════════════════════════
+// TICK — only processes real or manual data (NO simulation)
+// ════════════════════════════════════════════════════
+let prevDecAngle = -1;
+let liveInterval = null;
+
+async function liveTick() {
+  const d = await fetchLive();
+  if(!d) return; // Do nothing if offline — no fake data
+
+  S.data = d;
+  S.totalReadings++;
+  S.liveReadings++;
+  S.isManualOverride = false;
+  document.getElementById('overrideActiveBadge').style.display = 'none';
+
+  updateCards(d);
+  const dec = aiDecision(d);
+  updateAI(dec);
+  updateAIDecisionDisplay(dec);
+
+  if(!S.manualMode) {
+    S.currentAngle = dec.angle;
+    updateGauge(dec.angle);
+    updateSliderBg(dec.angle);
+    document.getElementById('angleSlider').value = dec.angle;
+    document.getElementById('sliderDisplay').textContent = dec.angle+'°';
+    updateWindowViz(dec.angle);
+    if(dec.angle !== prevDecAngle && prevDecAngle !== -1) {
+      addLog(`AI → Angle: ${dec.angle}° | ${dec.reason} | Conf: ${dec.conf}%`, 'ai');
+    }
+    prevDecAngle = dec.angle;
+  }
+
+  runFaultDetection(d);
+  updateCharts(d);
+  addRecord(d, dec, 'esp32');
+  updateUptimeBar('esp32');
+  updateMetaStats();
+}
+
+function setMode(mode) {
+  S.mode = mode;
+  if(mode === 'live') {
+    if(liveInterval) clearInterval(liveInterval);
+    addLog('Switched to Live ESP32 Mode — Polling started...','info');
+    liveTick(); // immediate
+    liveInterval = setInterval(liveTick, 3000);
+  }
+}
+
+function updateServerUrl() {
+  const val = document.getElementById('serverUrlInput').value.trim();
+  if(val) {
+    S.serverUrl = val;
+    addLog(`Server URL updated: ${val}`, 'info');
+    document.getElementById('offlineUrlLabel').textContent = val.replace('http://','');
+    setMode('live');
+  }
+}
+
+// ════════════════════════════════════════════════════
+// UPTIME BAR
+// ════════════════════════════════════════════════════
+function updateUptimeBar(source) {
+  S.uptimeSegs.push(source);
+  if(S.uptimeSegs.length > 60) S.uptimeSegs.shift();
+  const bar = document.getElementById('uptimeBar');
+  bar.innerHTML = S.uptimeSegs.map(s =>
+    `<div class="up-seg" style="background:${
+      s==='esp32'?'rgba(57,255,126,0.5)':
+      s==='manual'?'rgba(255,176,32,0.4)':
+      'rgba(100,100,100,0.2)'
+    }" title="${s}"></div>`
+  ).join('');
+  document.getElementById('totalReadings').textContent = S.totalReadings;
+  document.getElementById('liveReadings').textContent  = S.liveReadings;
+}
+
+function updateMetaStats() {
+  const secs = Math.floor((Date.now() - S.startTime) / 1000);
+  const mins = Math.floor(secs/60), hrs = Math.floor(mins/60);
+  document.getElementById('uptimeStat').textContent = hrs>0?`${hrs}h${mins%60}m`:`${mins}m`;
+  document.getElementById('readingsStat').textContent = S.totalReadings;
+}
+
+// ════════════════════════════════════════════════════
+// TIME
+// ════════════════════════════════════════════════════
+function updateTime() {
+  const now = new Date();
+  document.getElementById('tTime').textContent = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  document.getElementById('tDate').textContent = now.toLocaleDateString('en-US',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+function init() {
+  addLog('SmartVent AI v3.0 — System initialized','success');
+  addLog('Awaiting ESP32 connection (no simulation mode)','info');
+  addLog('Enter ESP32 IP in the connectivity panel and click Connect','info');
+  updateGauge(60);
+  updateSliderBg(60);
+  updateWindowViz(60);
+  setInterval(updateTime, 1000);
+  updateTime();
+}
+</script>
+</body>
+</html>
